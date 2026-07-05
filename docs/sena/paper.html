@@ -11,6 +11,7 @@
       window.MathJax = {
         tex: {
           tags: "ams",
+          macros: {},
           inlineMath: [["\\(", "\\)"]],
           displayMath: [["\\[", "\\]"]],
           processEscapes: true
@@ -51,21 +52,21 @@
 
       <article class="tex-article">
 <p class='noindent'>
-                                                                                         
-                                                                                         
+
+
 </p>
 <div class='maketitle'>
-                                                                                         
-                                                                                         
-                                                                                         
-                                                                                         
+
+
+
+
 
 <h1 class='titleHead'>SENA: Sparse-stock Estimation with Nonstationary Adaptation</h1>
  <div class='author'><span class='cmr-12'>Monysovann Ly</span></div>
 <br />
 <div class='date'><span class='cmr-12'>July 5, 2026</span></div>
 </div>
-<section class='abstract' role='doc-abstract'> 
+<section class='abstract' role='doc-abstract'>
 <h3 class='abstracttitle'>
 <span class='cmbx-10'>Abstract</span>
 </h3>
@@ -85,11 +86,11 @@
 </p>
 </section>
 <p class='noindent'><span class='cmbx-10x-x-109'>Keywords: </span>Bayesian inference; inventory reconstruction; stockout risk; demand drift; restocking policy;
-                                                                                         
-                                                                                         
+
+
 safety stock; reorder point.
-                                                                                         
-                                                                                         
+
+
 
 </p>
 <h3 class='likesectionHead' id='contents'> <a id='x1-1000'></a>Contents</h3>
@@ -113,11 +114,11 @@ safety stock; reorder point.
 <br /><span class='sectionToc'>7 <a href='#evaluation-protocol-for-publication-readiness' id='QQ2-1-23'>Evaluation protocol for publication readiness</a></span>
 <br /><span class='sectionToc'>8 <a href='#limitations' id='QQ2-1-24'>Limitations</a></span>
 <br /><span class='sectionToc'>9 <a href='#inference-that-is-realistic' id='QQ2-1-25'>Inference that is realistic</a></span>
-                                                                                         
-                                                                                         
+
+
 </div>
-                                                                                         
-                                                                                         
+
+
 
 <h3 class='sectionHead' id='what-sena-models'><span class='titlemark'>1   </span>   <a id='x1-20001'></a>What SENA models</h3>
 <p class='noindent'><span class='cmbx-10x-x-109'>Scope. </span>SENA is designed for a single business entity with one internally coherent inventory process,
@@ -142,8 +143,8 @@ pooling is assumed.
 defaults, and posterior outputs; later sections outline evaluation expectations and practical inference
 workflows needed before publication-ready empirical claims can be made.
 
-                                                                                         
-                                                                                         
+
+
 </p>
 <h4 class='likesubsectionHead' id='highlevel-diagram'> <a id='x1-3000'></a>High-level diagram</h4>
 <div class='center'>
@@ -159,8 +160,8 @@ workflows needed before publication-ready empirical claims can be made.
 <li class='enumerate' id='x1-3004x2'>Service (<span class='mathjax-inline'>\(j \in \{1,\dots ,J\}\)</span>)
      </li>
 <li class='enumerate' id='x1-3006x3'>Bundle or promo service (<span class='mathjax-inline'>\(b \in \{1,\dots ,N_{\mathrm {bundle}}\}\)</span>) (optional explicit bundle types)</li></ol>
-                                                                                         
-                                                                                         
+
+
 <p class='noindent'><span class='cmbx-10x-x-109'>Definitions and notation</span>
      </p><ol class='enumerate1'>
 <li class='enumerate' id='x1-3008x1'>Report times: <span class='mathjax-inline'>\(t_1 &lt; \dots &lt; t_K\)</span>.
@@ -186,8 +187,8 @@ workflows needed before publication-ready empirical claims can be made.
      <p class='noindent'>Inventory update in interval <span class='mathjax-inline'>\(k\)</span> for SKU <span class='mathjax-inline'>\(i\)</span> (for <span class='mathjax-inline'>\(k=2,\dots ,K\)</span>):
           </p><ol class='enumerate2'>
 <li class='enumerate' id='x1-3022x1'>Let <span class='mathjax-inline'>\(D_{k,i}\ge 0\)</span> denote <span class='cmti-10x-x-109'>latent (unconstrained) demand/usage </span>in the interval.
-                                                                                         
-                                                                                         
+
+
           </li>
 <li class='enumerate' id='x1-3024x2'>Let <span class='mathjax-inline'>\(G_{k,i}\in \{0,1\}\)</span> indicate whether an order is placed in interval <span class='mathjax-inline'>\(k\)</span>, let <span class='mathjax-inline'>\(O_{k,i}\ge 0\)</span> be placed quantity, and let <span class='mathjax-inline'>\(s_{k,i}\in [t_{k-1},t_k]\)</span> be
           the within-interval placement timestamp.
@@ -216,8 +217,8 @@ workflows needed before publication-ready empirical claims can be made.
 <li class='enumerate' id='x1-3040x1'><span class='mathjax-inline'>\(S_{k,j}\)</span>: <span class='cmti-10x-x-109'>latent demand-side </span>count of service <span class='mathjax-inline'>\(j\)</span> instances in interval <span class='mathjax-inline'>\(k\)</span>.
           </li>
 <li class='enumerate' id='x1-3042x2'><span class='mathjax-inline'>\(Q_{k,i}\)</span>: <span class='cmti-10x-x-109'>latent demand-side </span>retail quantity of SKU <span class='mathjax-inline'>\(i\)</span> in interval <span class='mathjax-inline'>\(k\)</span> (if modeled).
-                                                                                         
-                                                                                         
+
+
           </li>
 <li class='enumerate' id='x1-3044x3'>
           <p class='noindent'>Optional explicit realized-sales quantities: <span class='mathjax-inline'>\(S^{\mathrm {real}}_{k,j}\)</span> and <span class='mathjax-inline'>\(Q^{\mathrm {real}}_{k,i}\)</span>, with </p><div class='mathjax-block'>\[ 0\le S^{\mathrm {real}}_{k,j}\le S_{k,j},\qquad 0\le Q^{\mathrm {real}}_{k,i}\le Q_{k,i}. \]</div>
@@ -248,8 +249,8 @@ workflows needed before publication-ready empirical claims can be made.
 <li class='enumerate' id='x1-3058x6'><span class='cmbx-10x-x-109'>Correction: </span>bookkeeping/measurement correction (late entry, recount, unit conversion,
           write-off). This regime increases the probability and/or scale of inventory corrections <span class='mathjax-inline'>\(A^{\mathrm {adj}}_{k,i}\)</span>
           and can also inflate observation noise <span class='mathjax-inline'>\(\sigma _{\text {obs},i}\)</span> for the affected interval.</li></ol>
-                                                                                         
-                                                                                         
+
+
      <p class='noindent'>For notation clarity, let <span class='mathjax-inline'>\(r\in \{1,\dots ,R\}\)</span> index regime types and define regime-specific parameter tables <span class='mathjax-inline'>\(\kappa _{r,j},\ \phi _{r,i},\ m^{\mathrm {adj}}_{r,i},\ s^{\mathrm {adj}}_{r,i}\)</span>. In interval
      <span class='mathjax-inline'>\(k\)</span>, evaluate these parameters at <span class='mathjax-inline'>\(r=z_k\)</span> inside likelihood and transition terms.
      </p></li>
@@ -270,8 +271,8 @@ workflows needed before publication-ready empirical claims can be made.
      </li>
 <li class='enumerate' id='x1-3074x6'><span class='mathjax-inline'>\(G_{k,i},O_{k,i},s_{k,i},R_{k,i}\)</span>: placement event, placed quantity, placement timestamp, and received quantity (defined on
      transition intervals <span class='mathjax-inline'>\(k=2,\dots ,K\)</span>)
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-3076x7'><span class='mathjax-inline'>\(m^L_{k,i}, v^L_{k,i}\)</span>: latent lead-time mean (days) and latent lead-time variance state (days<span class='mathjax-inline'>\(^2\)</span>)
      </li>
@@ -289,8 +290,8 @@ workflows needed before publication-ready empirical claims can be made.
 <h4 class='likesubsectionHead' id='observed-optional-addons'> <a id='x1-5000'></a>Observed (optional add-ons)</h4>
 <p class='noindent'>
      </p><ol class='enumerate1'>
-                                                                                         
-                                                                                         
+
+
 <li class='enumerate' id='x1-5002x1'>
      <p class='noindent'>User-supplied exogenous price and lead-time summaries:
           </p><ol class='enumerate2'>
@@ -315,8 +316,8 @@ workflows needed before publication-ready empirical claims can be made.
      </li>
 <li class='enumerate' id='x1-5020x3'>
      <p class='noindent'>Optional order-event logs per update:
-                                                                                         
-                                                                                         
+
+
           </p><ol class='enumerate2'>
 <li class='enumerate' id='x1-5022x1'><span class='mathjax-inline'>\(\tilde g^{\mathrm {ord}}_{k,i} \in \{0,1\}\)</span>: user indicates whether an order was placed for SKU <span class='mathjax-inline'>\(i\)</span> in <span class='mathjax-inline'>\(\Delta t_k\)</span>
           </li>
@@ -339,8 +340,8 @@ workflows needed before publication-ready empirical claims can be made.
 <li class='enumerate' id='x1-5038x2'><span class='mathjax-inline'>\(o^{\mathrm {ret}}_{k,i} \in \{0,1\}\)</span>: whether retail SKU <span class='mathjax-inline'>\(i\)</span> was unavailable at any point in <span class='mathjax-inline'>\(\Delta t_k\)</span></li></ol>
      </li></ol>
 
-                                                                                         
-                                                                                         
+
+
 <h3 class='sectionHead' id='inventory-dynamics'><span class='titlemark'>2   </span>   <a id='x1-60002'></a>Inventory dynamics</h3>
 <p class='noindent'>For each SKU <span class='mathjax-inline'>\(i\)</span>, with initial states <span class='mathjax-inline'>\((x_{1,i},B_{1,i})\)</span> and enforced zero initial pipeline <span class='mathjax-inline'>\(B_{1,i}=0\)</span>, the transition recursions below apply
 for <span class='mathjax-inline'>\(k=2,\dots ,K\)</span> unless otherwise stated.
@@ -367,8 +368,8 @@ for <span class='mathjax-inline'>\(k=2,\dots ,K\)</span> unless otherwise stated
      <p class='noindent'>Inventory updates as </p><div class='mathjax-env mathjax-equation'>\begin{equation}\label {eq:inv-clamp-update} x_{k,i} = \max \bigl \{0,\ x^\star _{k,i}\bigr \}. \end{equation}</div>
 <a id='x1-6018r4'></a>
      </li></ol>
-                                                                                         
-                                                                                         
+
+
 <p class='noindent'>Equations (<a href='#x1-6009r1'>1</a>)–(<a href='#x1-6018r4'>4</a>) define the core inventory transition used throughout the manuscript.
 </p><p class='noindent'>We decompose latent demand into service and retail components: </p><div class='mathjax-block'>\[ D_{k,i} = D^{\mathrm {svc}}_{k,i} + D^{\mathrm {ret}}_{k,i}. \]</div>
 <p class='noindent'>Here <span class='mathjax-inline'>\(A^{\mathrm {adj}}_{k,i}\)</span> is a signed correction term (e.g., recount, write-off, unit conversion).
@@ -392,8 +393,8 @@ indicator.
 <p class='noindent'>Then define </p><div class='mathjax-block'>\[ U^{(m)}_{k,j,i} = Z^{(m)}_{k,j,i} \cdot \tilde U^{(m)}_{k,j,i},\qquad \tilde U^{(m)}_{k,j,i} &gt; 0, \]</div>
 <p class='noindent'>with a positive recipe distribution for the slab, e.g. </p><div class='mathjax-block'>\[ \log \tilde U^{(m)}_{k,j,i} \sim \text {Student-}t_{\nu }\bigl (\mu ^{\mathrm {use}}_{k,j,i},\ \sigma ^{\mathrm {use}}_{j,i}\bigr ). \]</div>
 <p class='noindent'>If <span class='mathjax-inline'>\(A_{j,i}=0\)</span>, enforce <span class='mathjax-inline'>\(Z^{(m)}_{k,j,i}=0\)</span> and hence <span class='mathjax-inline'>\(U^{(m)}_{k,j,i}=0\)</span>.
-                                                                                         
-                                                                                         
+
+
 </p><p class='noindent'>Service-driven latent demand contribution of SKU <span class='mathjax-inline'>\(i\)</span> over the interval: </p><div class='mathjax-block'>\[ D^{\mathrm {svc}}_{k,i} = \sum _{j=1}^{J} \bar U_{k,j,i} = \sum _{j=1}^{J}\sum _{m=1}^{S_{k,j}} U^{(m)}_{k,j,i}. \]</div>
 
 <h4 class='subsectionHead' id='retail-sales-of-skus'><span class='titlemark'>2.3   </span>   <a id='x1-90002.3'></a>Retail sales of SKUs</h4>
@@ -416,8 +417,8 @@ Section <a href='#drift-handling-gradual-seasonal-abrupt'>4</a>.
 <li class='enumerate' id='x1-10002x1'><span class='mathjax-inline'>\(A^{\mathrm {adj}}_{k,i}&lt;0\)</span> corresponds to shrinkage/write-offs (waste, spoilage, theft).
      </li>
 <li class='enumerate' id='x1-10004x2'><span class='mathjax-inline'>\(A^{\mathrm {adj}}_{k,i}&gt;0\)</span> corresponds to upward corrections (late entries, recounts, unit conversion fixes).</li></ol>
-                                                                                         
-                                                                                         
+
+
 <p class='noindent'>Inventory is still clamped at zero via Eq. (<a href='#x1-6018r4'>4</a>).
 
 </p>
@@ -446,8 +447,8 @@ historical placement timestamp is available; otherwise set <span class='mathjax-
 <p class='noindent'>where <span class='mathjax-inline'>\(T^{\mathrm {ord}}_i\)</span> is a SKU-specific target inventory position. Then define the LogNormal location parameter by
 </p><div class='mathjax-block'>\[ \mu ^{O}_{k,i}=\alpha ^{O}_i+\beta ^{O}_i\,g^{O}_{k,i},\qquad \beta ^{O}_i\ge 0,\qquad k=2,\dots ,K. \]</div>
 <p class='noindent'>Thus, conditional on placing an order, larger shortfalls between the target inventory position and the
-                                                                                         
-                                                                                         
+
+
 current inventory position <span class='mathjax-inline'>\(x_{k-1,i}+B_{k-1,i}\)</span> imply larger expected order sizes on the log scale.
 </p><p class='noindent'>Placed quantity is </p><div class='mathjax-block'>\[ O_{k,i} \sim \begin {cases} 0 &amp; \text {if } G_{k,i}=0,\\ \text {LogNormal}(\mu ^{O}_{k,i},\ \sigma ^{O}_i) &amp; \text {if } G_{k,i}=1. \end {cases} \]</div>
 <p class='noindent'>To avoid boundary-time ambiguity, define an explicit within-interval placement timestamp
@@ -480,8 +481,8 @@ required, use </p><div class='mathjax-block'>\[ L^{\mathrm {ord,day}}_{u,i}=\max
 <p class='noindent'>Therefore, lead-time uncertainty enters the <span class='cmti-10x-x-109'>generative inventory transition </span>through <span class='mathjax-inline'>\(R_{k,i}\)</span> and <span class='mathjax-inline'>\(B_{k,i}\)</span>, not only
 through downstream planning formulas.
 
-                                                                                         
-                                                                                         
+
+
 </p>
 <h3 class='sectionHead' id='promotions-and-bundles'><span class='titlemark'>3   </span>   <a id='x1-120003'></a>Promotions and bundles</h3>
 <p class='noindent'><span class='cmbx-10x-x-109'>Motivation. </span>Sparse inventory snapshots create an ill-posed inverse problem: many different latent
@@ -537,8 +538,8 @@ with its own latent count <span class='mathjax-inline'>\(S_{k,b}\)</span>, price
      shampoo” or “service + take-home product”). These multi-SKU signatures make it easier
      to distinguish bundle-driven consumption from coincidental co-movement across independent
      services.
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-14006x3'><span class='cmbx-10x-x-109'>Identifiability gain: </span>when inventory drops across several SKUs occur together, the posterior
      can put mass on bundle events instead of forcing implausible correlated spikes across many
@@ -564,8 +565,8 @@ borrowing strength from past observations.
      </li>
 <li class='enumerate' id='x1-15004x2'><span class='cmbx-10x-x-109'>Seasonal  drift: </span>predictable  periodic  patterns  (day-of-week,  month-of-year),  modeled  as
      additive covariates (e.g., <span class='mathjax-inline'>\(w_{j,\text {dow}}\)</span> and <span class='mathjax-inline'>\(w_{j,\text {month}}\)</span>) with shrinkage so they only activate when supported by data.
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-15006x3'><span class='cmbx-10x-x-109'>Abrupt drift: </span>rare structural breaks (new menu, supplier change, policy change, accounting
      correction), modeled via change points <span class='mathjax-inline'>\(c_k\)</span> that allow partial resets or jumps in intensities and/or
@@ -592,8 +593,8 @@ increments.
      </p><ol class='enumerate1'>
 <li class='enumerate' id='x1-16002x1'><span class='mathjax-inline'>\(\epsilon _{k,j}\)</span> is the unit-time latent shock to the log-intensity for service <span class='mathjax-inline'>\(j\)</span> in interval <span class='mathjax-inline'>\(k\)</span>; the realized interval
      increment is <span class='mathjax-inline'>\(\sqrt {\Delta t_k}\,\epsilon _{k,j}\)</span>.
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-16004x2'><span class='mathjax-inline'>\(\nu _{\lambda }\)</span> is the degrees-of-freedom controlling tail-heaviness; smaller values allow occasional larger
      jumps.
@@ -617,8 +618,8 @@ increments.
 For each service <span class='mathjax-inline'>\(j\)</span>, add calendar effects to the log-intensity: </p><div class='mathjax-block'>\[ \log \lambda _{k,j} \mathrel {+}= w_{j,\text {dow}}(\text {day of week}) + w_{j,\text {month}}(\text {month}). \]</div>
 <p class='noindent'>Here <span class='mathjax-inline'>\(w_{j,\text {dow}}(d)\)</span> is the day-of-week effect (a 7-vector per service) and <span class='mathjax-inline'>\(w_{j,\text {month}}(m)\)</span> is the month-of-year effect (a 12-vector per
 service).
-                                                                                         
-                                                                                         
+
+
 </p><p class='noindent'><span class='cmbx-10x-x-109'>What “shrinkage priors” means. </span>A <span class='cmti-10x-x-109'>prior </span>is a probability distribution placed on an unknown
 parameter before seeing the current user’s data. A <span class='cmti-10x-x-109'>shrinkage prior </span>is a prior centered at 0 with most of its
 mass near 0, so that in the absence of strong evidence the posterior prefers small seasonal effects (i.e., <span class='mathjax-inline'>\(w\approx 0\)</span>).
@@ -648,8 +649,8 @@ the new baseline up to change-point noise.
 <p class='noindent'>If recipe-mean drift is enabled, use </p><div class='mathjax-env mathjax-equation'>\begin{equation}\label {eq:cp-recipe} \mu ^{\mathrm {use}}_{k,j,i}= \begin {cases} \mu ^{\mathrm {use}}_{k-1,j,i}+\sqrt {\Delta t_k}\,\eta _{k,j,i}, &amp; c_k=0,\\ (1-\omega ^{\mathrm {cp}}_{\mathrm {use},j,i})\mu ^{\mathrm {use}}_{k-1,j,i} + \omega ^{\mathrm {cp}}_{\mathrm {use},j,i} b^{\mathrm {use}}_{j,i} + \zeta ^{\mathrm {use}}_{k,j,i}, &amp; c_k=1, \end {cases} \end{equation}</div>
 <p><a id='x1-18003r10'></a>
 </p><p class='noindent'>with </p><div class='mathjax-block'>\[ \zeta ^{\mathrm {use}}_{k,j,i}\sim \text {Normal}(0,(\sigma ^{\mathrm {cp}}_{\mathrm {use},j,i})^2),\qquad \omega ^{\mathrm {cp}}_{\mathrm {use},j,i}\in [0,1]. \]</div>
-                                                                                         
-                                                                                         
+
+
 <p class='noindent'>Seasonal covariates continue to enter through the same additive terms after these state updates, so change
 points capture structural level shifts rather than recurring calendar effects. If a block should not jump, fix
 its corresponding reset weights <span class='mathjax-inline'>\(\omega ^{\mathrm {cp}}\)</span> to <span class='mathjax-inline'>\(0\)</span>.
@@ -673,8 +674,8 @@ version of an underlying noisy measurement, e.g., by adding an explicit rounding
 model that puts extra mass on common multiples.
 
 </p>
-                                                                                         
-                                                                                         
+
+
 <h5 class='likesubsubsectionHead' id='optional-minimal-user-inputs-as-extra-observations'> <a id='x1-20000'></a>Optional minimal user inputs as extra observations</h5>
 <p class='noindent'>These inputs are designed to be low-effort (binary/categorical/ordinal) while materially improving
 identifiability.
@@ -703,8 +704,8 @@ robust default.
 logs of either event help identify the replenishment path.
 </p><p class='noindent'><span class='cmbx-10x-x-109'>What the user provides.</span>
      </p><ol class='enumerate1'>
-                                                                                         
-                                                                                         
+
+
 <li class='enumerate' id='x1-20006x1'><span class='mathjax-inline'>\(\tilde g^{\mathrm {ord}}_{k,i}\in \{0,1\}\)</span>: whether an order was placed for SKU <span class='mathjax-inline'>\(i\)</span> in <span class='mathjax-inline'>\(\Delta t_k\)</span>.
      </li>
 <li class='enumerate' id='x1-20008x2'><span class='mathjax-inline'>\(\tilde h^{\mathrm {rcv}}_{k,i}\in \{0,1\}\)</span>: whether any receipt arrived for SKU <span class='mathjax-inline'>\(i\)</span> in <span class='mathjax-inline'>\(\Delta t_k\)</span>.
@@ -727,8 +728,8 @@ stable.
 “wash” services, but not by “consultation”). In practice this can come from a point-of-sale menu, a
 bill-of-materials template, or a simple checkbox UI.
 </p><p class='noindent'><span class='cmbx-10x-x-109'>How it enters the model. </span>For canonical per-instance usage <span class='mathjax-inline'>\(U^{(m)}_{k,j,i}\)</span>:
-                                                                                         
-                                                                                         
+
+
      </p><ol class='enumerate1'>
 <li class='enumerate' id='x1-20018x1'>If <span class='mathjax-inline'>\(A_{j,i}=0\)</span>, enforce <span class='mathjax-inline'>\(U^{(m)}_{k,j,i}=0\)</span> for all <span class='mathjax-inline'>\(k,m\)</span> (structural zero).
      </li>
@@ -750,8 +751,8 @@ inventory, not lack of customers. Stockout flags help the model distinguish thes
 <li class='enumerate' id='x1-20028x2'>If <span class='mathjax-inline'>\(o^{\mathrm {svc}}_{k,j}=0\)</span>, downweight trajectories that would force service <span class='mathjax-inline'>\(j\)</span> to be stockout-constrained.
      </li>
 <li class='enumerate' id='x1-20030x3'>If <span class='mathjax-inline'>\(o^{\mathrm {ret}}_{k,i}=1\)</span>, upweight trajectories where SKU <span class='mathjax-inline'>\(i\)</span> hits (or closely approaches) zero during <span class='mathjax-inline'>\(\Delta t_k\)</span>.
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-20032x4'>If <span class='mathjax-inline'>\(o^{\mathrm {ret}}_{k,i}=0\)</span>, downweight trajectories that would require SKU <span class='mathjax-inline'>\(i\)</span> to be at (or near) zero for extended
      periods.</li></ol>
@@ -777,8 +778,8 @@ treated as noisy (and potentially stale) observations.
 <li class='enumerate' id='x1-20039x3'>A simple uncertainty proxy via range <span class='mathjax-inline'>\([\tilde L^{\mathrm {lo}}_{k,i},\tilde L^{\mathrm {hi}}_{k,i}]\)</span>.</li></ol>
 <p class='noindent'><span class='cmbx-10x-x-109'>Range to ordinal variability map.</span>
 </p><p class='noindent'>Define a relative range width </p><div class='mathjax-block'>\[ w_{k,i}=\frac {\tilde L^{\mathrm {hi}}_{k,i}-\tilde L^{\mathrm {lo}}_{k,i}}{\max \!\left \{\frac {\tilde L^{\mathrm {hi}}_{k,i}+\tilde L^{\mathrm {lo}}_{k,i}}{2},\ \epsilon _L\right \}}. \]</div>
-                                                                                         
-                                                                                         
+
+
 <p class='noindent'>Here, <span class='mathjax-inline'>\(\epsilon _L&gt;0\)</span> denotes a fixed lead-time floor in day units, with default value <span class='mathjax-inline'>\(\epsilon _L=0.5\)</span> day. Map <span class='mathjax-inline'>\(w_{k,i}\)</span> to an ordinal class <span class='mathjax-inline'>\(\tilde c^L_{k,i}\in \{1,\dots ,C\}\)</span> using
 thresholds <span class='mathjax-inline'>\(\rho _1&lt;\dots &lt;\rho _{C-1}\)</span>.
 </p><p class='noindent'><span class='cmbx-10x-x-109'>Observation model for latent lead-time states.</span>
@@ -828,8 +829,8 @@ recipe drift shock <span class='mathjax-inline'>\(\eta _{k,j,i}\)</span>.) Prior
 </p><p class='noindent'>If using the spike-and-slab recipe layer, <span class='mathjax-inline'>\(\rho _{k,j,i} \in (0,1)\)</span> controls how often SKU <span class='mathjax-inline'>\(i\)</span> is used when <span class='mathjax-inline'>\(A_{j,i}=1\)</span>. A simple default is a
 weak prior: </p><div class='mathjax-block'>\[ \rho _{k,j,i} \sim \text {Beta}(1,1). \]</div>
 <p class='noindent'>Optionally, <span class='mathjax-inline'>\(\text {logit}(\rho _{k,j,i})\)</span> can be given a drift model analogous to <span class='mathjax-inline'>\(\log \lambda _{k,j}\)</span>.
-                                                                                         
-                                                                                         
+
+
 </p><p class='noindent'><span class='cmbx-10x-x-109'>Seasonality shrinkage (hierarchical).</span> </p><div class='mathjax-block'>\[ w_{j,\text {dow}}(d) \sim \text {Normal}(0,\ \sigma ^2_{\text {dow},j}),\qquad w_{j,\text {month}}(m) \sim \text {Normal}(0,\ \sigma ^2_{\text {month},j}). \]</div>
 <div class='mathjax-block'>\[ \sigma _{\text {dow},j} \sim \text {HalfNormal}(0,\ \tau _{\text {dow}}),\qquad \sigma _{\text {month},j} \sim \text {HalfNormal}(0,\ \tau _{\text {month}}). \]</div>
 <div class='mathjax-block'>\[ \tau _{\text {dow}} \sim \text {HalfNormal}(0,\ 1),\qquad \tau _{\text {month}} \sim \text {HalfNormal}(0,\ 1). \]</div>
@@ -861,8 +862,8 @@ drift.
 </p><p class='noindent'>The LogNormal location is defined through a pipeline-aware inventory-position gap: </p><div class='mathjax-block'>\[ g^{O}_{k,i}=\bigl (T^{\mathrm {ord}}_i-x_{k-1,i}-B_{k-1,i}\bigr )_+, \qquad \mu ^{O}_{k,i}=\alpha ^{O}_i+\beta ^{O}_i\,g^{O}_{k,i}, \]</div>
 <p class='noindent'>with <span class='mathjax-inline'>\(T^{\mathrm {ord}}_i&gt;0\)</span> and <span class='mathjax-inline'>\(\beta ^{O}_i\ge 0\)</span>. Here <span class='mathjax-inline'>\(T^{\mathrm {ord}}_i\)</span> is a SKU-specific target inventory position, <span class='mathjax-inline'>\(\alpha ^{O}_i\)</span> is a baseline log-order-size intercept, and <span class='mathjax-inline'>\(\beta ^{O}_i\)</span>
 controls how strongly order size increases when inventory position falls below target. For scaled
-                                                                                         
-                                                                                         
+
+
 inventory-position inputs, use weakly informative priors </p><div class='mathjax-block'>\[ \alpha ^{O}_i \sim \text {Student-}t_3(0,2.5),\qquad \beta ^{O}_i \sim \text {Half-}t_4(0,\ s_{\beta O}),\qquad \log T^{\mathrm {ord}}_i \sim \text {Normal}(0,\ s_T^2). \]</div>
 <p class='noindent'>Defaults after scaling: initialize <span class='mathjax-inline'>\(\alpha ^{O}_i=0\)</span>, <span class='mathjax-inline'>\(\beta ^{O}_i=1\)</span>, and <span class='mathjax-inline'>\(T^{\mathrm {ord}}_i=1\)</span>, with <span class='mathjax-inline'>\(s_{\beta O}=1\)</span> and <span class='mathjax-inline'>\(s_T=1\)</span>.
 </p><p class='noindent'>Order size noise: <span class='mathjax-inline'>\(\sigma ^{O}_i &gt; 0\)</span>. This parameter appears in the LogNormal order-size model <span class='mathjax-inline'>\(O_{k,i}\mid (G_{k,i}=1)\sim \text {LogNormal}(\mu ^{O}_{k,i},\sigma ^{O}_i)\)</span> and controls multiplicative
@@ -891,8 +892,8 @@ pricing <span class='cite'>[<a href='#XGallegoVanRyzin1994'>4</a>]</span> and s
 </p><p class='noindent'>Lead-time states evolve on the log scale: </p><div class='mathjax-block'>\[ \ell _{k,i}=\log m^L_{k,i},\qquad \psi _{k,i}=\log v^L_{k,i}. \]</div>
 <p class='noindent'>Interpret <span class='mathjax-inline'>\(m^L_{k,i}\)</span> in days and <span class='mathjax-inline'>\(v^L_{k,i}\)</span> as variance in days<span class='mathjax-inline'>\(^2\)</span>. Use unit-time drift-shock priors, for example </p><div class='mathjax-block'>\[ \epsilon ^{\ell }_{k,i}\sim \text {Student-}t_{\nu _L}(0,\sigma _{L,i}),\qquad \epsilon ^{\psi }_{k,i}\sim \text {Student-}t_{\nu _v}(0,\sigma _{v,i}), \]</div>
 <p class='noindent'>with state updates scaled by <span class='mathjax-inline'>\(\sqrt {\Delta t_k}\)</span> and <span class='mathjax-inline'>\(\sigma _{L,i},\sigma _{v,i}\sim \text {Half-}t_{4}(0,1)\)</span>.
-                                                                                         
-                                                                                         
+
+
 </p><p class='noindent'>For noisy user observations, use:
      </p><ol class='enumerate1'>
 <li class='enumerate' id='x1-21014x1'>Typical lead-time noise scale <span class='mathjax-inline'>\(\tau _m&gt;0\)</span> in <span class='mathjax-inline'>\(\log \tilde m^L_{k,i}\sim \text {Normal}(\ell _{k^{m,\star }_{k,i},i},\tau _m^2)\)</span> with <span class='mathjax-inline'>\(k^{m,\star }_{k,i}=\max \{1,k-\delta ^m_{k,i}\}\)</span>, with prior <span class='mathjax-inline'>\(\tau _m\sim \text {HalfNormal}(0,1)\)</span>.
@@ -915,8 +916,8 @@ simple discrete option is: </p><div class='mathjax-block'>\[ \nu \in \{4,7,10,20
 </p><p class='noindent'>Temperature for the ordinal (ranking) likelihood: <span class='mathjax-inline'>\(\tau &gt;0\)</span>. This is the parameter in <span class='mathjax-inline'>\(P(a\succ b\mid \lambda )=\sigma \bigl ((\log \lambda _{k,a}-\log \lambda _{k,b})/\tau \bigr )\)</span>. (It is unrelated to the
 seasonality hyperparameters <span class='mathjax-inline'>\(\tau _{\text {dow}}\)</span> and <span class='mathjax-inline'>\(\tau _{\text {month}}\)</span>.)
 </p><p class='noindent'>Default: <span class='mathjax-inline'>\(\tau =1\)</span>. Prior: <span class='mathjax-inline'>\(\tau \sim \text {HalfNormal}(0,1)\)</span>. Equivalently, <span class='mathjax-inline'>\(\log \tau \sim \text {Normal}(0,1)\)</span>.
-                                                                                         
-                                                                                         
+
+
 </p><p class='noindent'>Optionally add rounding, for example a mixture that snaps to common increments.
 </p><p class='noindent'>Optional reporting timing model (only if you want to leverage the fact that users tend to report when
 stock is low): </p><div class='mathjax-block'>\[ P(\text {report at } t \mid x(t)) \propto \text {sigmoid}(a + b\,x(t) + d\,\text {age}). \]</div>
@@ -943,8 +944,8 @@ parameters.
      </li>
 <li class='enumerate' id='x1-22010x2'>
      <p class='noindent'><span class='cmbx-10x-x-109'>Demand and activity inference</span>
-                                                                                         
-                                                                                         
+
+
           </p><ol class='enumerate2'>
 <li class='enumerate' id='x1-22012x1'>Demand-side service counts and intensities: posterior for <span class='mathjax-inline'>\(S_{k,j}\)</span> and <span class='mathjax-inline'>\(\lambda _{k,j}\)</span>.
           </li>
@@ -969,8 +970,8 @@ parameters.
      </li>
 <li class='enumerate' id='x1-22030x4'>
      <p class='noindent'><span class='cmbx-10x-x-109'>Demand-rate features for planning (per SKU)</span>
-                                                                                         
-                                                                                         
+
+
      </p><p class='noindent'>Define the latent per-time demand rate in interval <span class='mathjax-inline'>\(k\)</span>: </p><div class='mathjax-block'>\[ d_{k,i} \equiv \frac {D_{k,i}}{\Delta t_k}. \]</div>
      <p class='noindent'>SENA reports the following (optionally conditioned on regime state <span class='mathjax-inline'>\(z_k\)</span>):
           </p><ol class='enumerate2'>
@@ -1003,8 +1004,8 @@ parameters.
      </p></li>
 <li class='enumerate' id='x1-22044x7'>
      <p class='noindent'><span class='cmbx-10x-x-109'>Time-varying safety stock, reorder point, and reorder triggers</span>
-                                                                                         
-                                                                                         
+
+
      </p><p class='noindent'>Fix a target cycle service level <span class='mathjax-inline'>\(p_{\mathrm {SL}}\)</span> (e.g., <span class='mathjax-inline'>\(0.95\)</span>) and let <span class='mathjax-inline'>\(z_{p_{\mathrm {SL}}}\)</span> be the corresponding Normal quantile.
      </p><p class='noindent'>Using posterior draws of demand rate and latent lead time, approximate demand during lead time at
      report <span class='mathjax-inline'>\(k\)</span> as </p><div class='mathjax-env mathjax-equation'>\begin{equation}\label {eq:lt-demand-approx} D^{\mathrm {LT}}_{k,i} \approx d_{k,i}\,L_{k,i}. \end{equation}</div>
@@ -1044,8 +1045,8 @@ parameters.
 <a id='x1-22056r21'></a>
      <p class='noindent'>where <span class='mathjax-inline'>\(d^{(s)}_{i}(t_k+u)\)</span> is the draw-specific future latent demand-rate path. A local approximation is
      </p><div class='mathjax-env mathjax-equation'>\begin{equation}\label {eq:protection-demand-approx} D^{H,(s)}_{k,i} \approx d^{(s)}_{k,i}\,H^{(s)}_{k,i}. \end{equation}</div>
-                                                                                         
-                                                                                         
+
+
 <a id='x1-22057r22'></a>
      <p class='noindent'>For each posterior draw, define the order-gap random variable </p><div class='mathjax-env mathjax-equation'>\begin{equation}\label {eq:order-gap-draw} g^{(s)}_{k,i} \equiv \bigl (D^{H,(s)}_{k,i} - IP^{(s)}_{k,i}\bigr )_+, \qquad IP^{(s)}_{k,i}=x^{(s)}_{k,i}+B^{(s)}_{k,i}, \end{equation}</div>
 <a id='x1-22058r23'></a>
@@ -1081,8 +1082,8 @@ parameters.
      </li>
 <li class='enumerate' id='x1-22071x10'>
      <p class='noindent'><span class='cmbx-10x-x-109'>Operational diagnostics</span>
-                                                                                         
-                                                                                         
+
+
      </p><p class='noindent'>Posterior summaries for regime activity, stockout-constrained intervals, and decision-trigger
      frequencies.</p></li></ol>
 
@@ -1108,8 +1109,8 @@ system. The following protocol makes claims falsifiable and comparable.
      versus baseline rules, using fill rate, realized stockout fraction, average on-hand inventory, and
      reorder frequency.
      </li>
-                                                                                         
-                                                                                         
+
+
 <li class='enumerate' id='x1-23010x5'><span class='cmbx-10x-x-109'>Ablation of optional signals. </span>Quantify the marginal value of each optional signal family
      (rankings, order logs, sharing mask, stockout flags, observed prices, lead-time typical/range
      entries) on calibration and downstream decisions.
@@ -1134,8 +1135,8 @@ reliability, and improved replenishment decisions.
      </li>
 <li class='enumerate' id='x1-24006x3'><span class='cmbx-10x-x-109'>Censoring is stylized. </span>The cap <span class='mathjax-inline'>\(C_{k,i}=\min \{D_{k,i},x_{k-1,i}+R_{k,i}\}\)</span> enforces feasibility at the interval level, but it is still an
      approximation to true censoring/lost-sales processes that depend on the path <span class='mathjax-inline'>\(x_i(t)\)</span> inside <span class='mathjax-inline'>\(\Delta t_k\)</span>.
-                                                                                         
-                                                                                         
+
+
      </li>
 <li class='enumerate' id='x1-24008x4'><span class='cmbx-10x-x-109'>Adjustments vs. demand/pipeline non-identifiability. </span>Signed corrections <span class='mathjax-inline'>\(A^{\mathrm {adj}}_{k,i}\)</span> can explain
      discrepancies that could alternatively be explained by demand, order timing, receipt timing,
@@ -1162,8 +1163,8 @@ Gibbs/PMCMC <span class='cite'>[<a href='#XAndrieuDoucetHolenstein2010'>1</a>]<
 and regimes). The primary target is </p><div class='mathjax-block'>\[ p\bigl (\Theta ,\mathcal {L}_{1:K}\mid \mathcal {D}_{1:K}\bigr ), \]</div>
 <p class='noindent'>where <span class='mathjax-inline'>\(\mathcal {D}_{1:K}\)</span> includes stock snapshots and any optional signals.
 </p><p class='noindent'><span class='cmbx-10x-x-109'>Recommended workflow.</span>
-                                                                                         
-                                                                                         
+
+
      </p><ol class='enumerate1'>
 <li class='enumerate' id='x1-25002x1'><span class='cmbx-10x-x-109'>Online filtering: </span>run SMC as new reports arrive to maintain approximate posteriors for
      current latent state and short-horizon risk metrics, using only covariates and normalizations
@@ -1189,10 +1190,10 @@ and regimes). The primary target is </p><div class='mathjax-block'>\[ p\bigl (\T
 <p class='noindent'>The core design principle remains single business entity learning: priors are generic and weakly
 informative, then updated only from that business’s data, with drift dynamics enabling controlled
 forgetting rather than cross-business pooling.
-                                                                                         
-                                                                                         
-                                                                                         
-                                                                                         
+
+
+
+
 
 </p>
 <h3 class='likesectionHead' id='references'> <a id='x1-26000'></a>References</h3>

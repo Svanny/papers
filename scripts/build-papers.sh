@@ -99,11 +99,11 @@ compile_paper \
 
 compile_paper \
   "scores" \
-  "main_parameters.tex" \
+  "main_bayes.tex" \
   "scores.pdf" \
   "scores.tex" \
-  "SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates" \
-  "Ordering / spectral methods" \
+  "Dynamic Latent Order Inference for Session Editing with Cold Item Uncertainty" \
+  "Bayesian ordering" \
   "references.bib"
 
 echo "Built paper PDFs, semantic HTML readers, and public source files under docs/."

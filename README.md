@@ -8,7 +8,7 @@ Site URL: <https://svanny.github.io/papers/>
 
 - A Formal Illumination of the Five Laws of Existence
 - SENA: Sparse-stock Estimation with Nonstationary Adaptation
-- SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates
+- Dynamic Latent Order Inference for Session Editing with Cold Item Uncertainty
 
 ## Repository Layout
 

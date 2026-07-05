@@ -1,7 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{microtype}
 \usepackage[numbers]{natbib}
 \usepackage{algorithm}
@@ -242,7 +242,11 @@ Taking the negative log and dropping additive constants independent of $z$ yield
 -\log p\big(y_d\mid z(d)\big)-\log p\big(z(d)\mid y_{1:d-1}\big).
 \]
 The first term is $\mathcal L_d(z)$ (Section~5.1).
-Using the Gaussian approximation $p\big(z(d)\mid y_{1:d-1}\big)\approx \mathcal N\!\big(m^-(d),P^-(d)\big)$ (Section~5.2), the second term becomes the quadratic form $\tfrac12(z-m^-(d))^\top (P^-(d))^{-1}(z-m^-(d))$ up to constants.
+Using the Gaussian approximation from Section~5.2, the second term becomes the quadratic form
+\[
+\frac12\big(z-m^-(d)\big)^\top\big(P^-(d)\big)^{-1}\big(z-m^-(d)\big)
+\]
+up to constants.
 Finally, the constraint $\mathbf{1}^\top z=0$ fixes the additive shift invariance of $z$.
 This objective is the central daily inference problem.
 
@@ -442,11 +446,11 @@ agreement with held-out session edits, or stability/latency metrics for a deploy
 Many parameters act as scales and are naturally searched in log space.
 For instance, choose grids such as
 \[
-\log \tau^2 \in \{\log 10^{-4},\log 10^{-3},\dots,\log 10^{0}\},
-\qquad
-\log \alpha \in \{\log 10^{-2},\log 10^{-1.5},\dots,\log 10^{1}\},
-\qquad
-\log \tau_e \in \{\log 10^{-2},\dots,\log 10^{2}\},
+\begin{aligned}
+\log \tau^2 &\in \{\log 10^{-4},\log 10^{-3},\dots,\log 10^{0}\},\\
+\log \alpha &\in \{\log 10^{-2},\log 10^{-1.5},\dots,\log 10^{1}\},\\
+\log \tau_e &\in \{\log 10^{-2},\dots,\log 10^{2}\},
+\end{aligned}
 \]
 while using linear grids for bounded parameters such as $\rho_c\in(0,1)$ (e.g., $\rho_c\in\{0.8,0.9,0.95,0.98\}$)
 and nonnegative multipliers such as $\kappa$ (e.g., $\kappa\in\{0,0.5,1,2\}$).
@@ -492,174 +496,67 @@ Start with a small log-grid over $(\tau^2,\alpha,\tau_e)$ and a short list for $
 Run a few days of uniform exploration to initialize rewards, then switch to a decayed-UCB or exponential-weights bandit
 to focus compute on the most promising regions while still occasionally probing alternatives.
 
-\\appendix
-\\section{Daily inference algorithm}
-\\label{app:daily_inference}
-\\begin{algorithm}[tbp]
-\\centering
-\\caption{Daily MAP + Laplace update for dynamic latent order inference}
-\\label{alg:daily_inference}
-\\begin{enumerate}
-\\item \\textbf{Build daily sufficient statistics.}
-From sessions on day $d$, compute the symmetric consecutive update counts $\\widehat S_{ij}(d)$.
-Also compute per-item update counts $\\widehat c_i(d)$, then update the decayed mass
-$c_i(d)=\\rho_c c_i(d-1)+(1-\\rho_c)\\widehat c_i(d)$ and days-since-activity $t_i(d)$.
-
-\\item \\textbf{Compute exposures and Poisson intensities.}
-Form per-item exposures $\\mathrm{expo}_i(d)=c_i(d)/(c_i(d)+\\tau_e)$ and pair exposures
-$e_{ij}(d)=\\mathrm{expo}_i(d)\\mathrm{expo}_j(d)$.
-Given a current iterate $z$, define $\\delta_{ij}(d)=|z_i-z_j|$ and
-$\\lambda_{ij}(d)=e_{ij}(d)\\exp\\big(\\beta(d)-\\alpha\\delta_{ij}(d)\\big)$.
-(In practice, $\\beta(d)$ may be set by matching total mass or treated as an optimizable intercept.)
-
-\\item \\textbf{Predict (prior propagation).}
-Set the dynamics covariance
-$Q(d)=\\mathrm{diag}\\big(\\tau^2 t_1(d),\\dots,\\tau^2 t_n(d)\\big)$.
-Use the random-walk moment matching approximation
-\\[\nm^-(d)=\\widehat z(d-1),\n\\qquad\nP^-(d)=\\Sigma(d-1)+Q(d).\n\\]
-
-\\item \\textbf{Form the day-$d$ objective.}
-Define the constrained MAP objective
-\\[\n\\mathcal J_d(z)=\\mathcal L_d(z)+\\frac12\\big(z-m^-(d)\\big)^\\top\\big(P^-(d)\\big)^{-1}\\big(z-m^-(d)\\big),\n\\qquad \\text{s.t. }\\mathbf 1^\\top z=0.\n\\]
-
-\\item \\textbf{Solve the MAP problem.}
-Initialize $z^{(0)}\\leftarrow m^-(d)$ (or $\\widehat z(d-1)$ projected to $\\mathbf 1^\\top z=0$).
-For $k=0,1,2,\\dots$ until convergence:
-\\begin{enumerate}
-\\item Compute gradient and Hessian of $\\mathcal J_d$:
-\\[\n\\nabla\\mathcal J_d(z)=\\nabla\\mathcal L_d(z)+\\big(P^-(d)\\big)^{-1}(z-m^-(d)),\n\\qquad\n\\nabla^2\\mathcal J_d(z)=\\nabla^2\\mathcal L_d(z)+\\big(P^-(d)\\big)^{-1}.\n\\]\n(Use the Laplacian-structured formulas for $\\nabla\\mathcal L_d$ and $\\nabla^2\\mathcal L_d$ from Section~5.4.)
-\\item Compute a Newton (or quasi-Newton) step $\\Delta z$ by solving
-$\\nabla^2\\mathcal J_d(z)\\,\\Delta z=-\\nabla\\mathcal J_d(z)$.
-Use a line search if needed to ensure decrease.
-\\item Update $z\\leftarrow z+\\Delta z$ and enforce gauge $\\mathbf 1^\\top z=0$ (e.g., subtract the mean:
-$z\\leftarrow z-(\\mathbf 1^\\top z/n)\\mathbf 1$).
-\\end{enumerate}
-Set $\\widehat z(d)\\leftarrow z$ at termination.
-
-\\item \\textbf{Laplace covariance update.}
-Set $\\Sigma(d)=\\Big(\\nabla^2\\mathcal J_d\\big(\\widehat z(d)\\big)\\Big)^{-1}$,\nor compute only the diagonal / selected entries of $\\Sigma(d)$ via linear solves when $n$ is large.
-
-\\item \\textbf{Output an ordering.}
-Return either the point estimate order $\\widehat\\pi(d)=\\mathrm{argsort}(\\widehat z(d))$,\nor the conservative order $\\pi_{\\mathrm{LCB}}(d)=\\mathrm{argsort}(s(d))$ with\n$s_i(d)=\\widehat z_i(d)-\\kappa\\sqrt{\\Sigma_{ii}(d)}$.
-\\end{enumerate}
-\\end{algorithm}
-
-\\appendix
-\\section{Daily inference algorithm}
-\\label{app:daily_inference}
-\\begin{algorithm}[tbp]
-\\centering
-\\caption{Daily MAP + Laplace update for dynamic latent order inference}
-\\label{alg:daily_inference}
-\\begin{enumerate}
-\\item \\textbf{Build daily sufficient statistics.}
-From sessions on day $d$, compute the symmetric consecutive update counts $\\widehat S_{ij}(d)$.
-Also compute per-item update counts $\\widehat c_i(d)$, then update the decayed mass
-$c_i(d)=\\rho_c c_i(d-1)+(1-\\rho_c)\\widehat c_i(d)$ and days-since-activity $t_i(d)$.
-
-\\item \\textbf{Compute exposures and Poisson intensities.}
-Form per-item exposures $\\mathrm{expo}_i(d)=c_i(d)/(c_i(d)+\\tau_e)$ and pair exposures
-$e_{ij}(d)=\\mathrm{expo}_i(d)\\mathrm{expo}_j(d)$.
-Given a current iterate $z$, define $\\delta_{ij}(d)=|z_i-z_j|$ and
-$\\lambda_{ij}(d)=e_{ij}(d)\\exp\\big(\\beta(d)-\\alpha\\delta_{ij}(d)\\big)$.
-(In practice, $\\beta(d)$ may be set by matching total mass or treated as an optimizable intercept.)
-
-\\item \\textbf{Predict (prior propagation).}
-Set the dynamics covariance
-$Q(d)=\\mathrm{diag}\\big(\\tau^2 t_1(d),\\dots,\\tau^2 t_n(d)\\big)$.
-Use the random-walk moment matching approximation
-\\[\nm^-(d)=\\widehat z(d-1),\n\\qquad\nP^-(d)=\\Sigma(d-1)+Q(d).\n\\]
-
-\\item \\textbf{Form the day-$d$ objective.}
-Define the constrained MAP objective
-\\[\n\\mathcal J_d(z)=\\mathcal L_d(z)+\\frac12\\big(z-m^-(d)\\big)^\\top\\big(P^-(d)\\big)^{-1}\\big(z-m^-(d)\\big),\n\\qquad \\text{s.t. }\\mathbf 1^\\top z=0.\n\\]
-
-\\item \\textbf{Solve the MAP problem.}
-Initialize $z^{(0)}\\leftarrow m^-(d)$ (or $\\widehat z(d-1)$ projected to $\\mathbf 1^\\top z=0$).
-For $k=0,1,2,\\dots$ until convergence:
-\\begin{enumerate}
-\\item Compute gradient and Hessian of $\\mathcal J_d$:
-\\[\n\\nabla\\mathcal J_d(z)=\\nabla\\mathcal L_d(z)+\\big(P^-(d)\\big)^{-1}(z-m^-(d)),\n\\qquad\n\\nabla^2\\mathcal J_d(z)=\\nabla^2\\mathcal L_d(z)+\\big(P^-(d)\\big)^{-1}.\n\\]\n(Use the Laplacian-structured formulas for $\\nabla\\mathcal L_d$ and $\\nabla^2\\mathcal L_d$ from Section~5.4.)
-\\item Compute a Newton (or quasi-Newton) step $\\Delta z$ by solving
-$\\nabla^2\\mathcal J_d(z)\\,\\Delta z=-\\nabla\\mathcal J_d(z)$.
-Use a line search if needed to ensure decrease.
-\\item Update $z\\leftarrow z+\\Delta z$ and enforce gauge $\\mathbf 1^\\top z=0$ (e.g., subtract the mean:
-$z\\leftarrow z-(\\mathbf 1^\\top z/n)\\mathbf 1$).
-\\end{enumerate}
-Set $\\widehat z(d)\\leftarrow z$ at termination.
-
-\\item \\textbf{Laplace covariance update.}
-Set $\\Sigma(d)=\\Big(\\nabla^2\\mathcal J_d\\big(\\widehat z(d)\\big)\\Big)^{-1}$,\nor compute only the diagonal / selected entries of $\\Sigma(d)$ via linear solves when $n$ is large.
-
-\\item \\textbf{Output an ordering.}
-Return either the point estimate order $\\widehat\\pi(d)=\\mathrm{argsort}(\\widehat z(d))$,\nor the conservative order $\\pi_{\\mathrm{LCB}}(d)=\\mathrm{argsort}(s(d))$ with\n$s_i(d)=\\widehat z_i(d)-\\kappa\\sqrt{\\Sigma_{ii}(d)}$.
-\\end{enumerate}
-\\end{algorithm}
-
-\subsection{Hyperparameter selection via grid search and bandits}
-The model introduces hyperparameters controlling drift, exposure discounting, and conservatism, for example
-$(\tau^2,\alpha,\tau_e,\rho_c,\kappa)$, and possibly the day intercept rule for $\beta(d)$.
-In practice these should be tuned against an offline proxy objective (e.g., next-day predictive log likelihood of counts,
-agreement with held-out session edits, or stability/latency metrics for a deployed ranking).
-
-\paragraph{Log-space grids.}
-Many parameters act as scales and are naturally searched in log space.
-For instance, choose grids such as
-\[
-\log \tau^2 \in \{\log 10^{-4},\log 10^{-3},\dots,\log 10^{0}\},
-\qquad
-\log \alpha \in \{\log 10^{-2},\log 10^{-1.5},\dots,\log 10^{1}\},
-\qquad
-\log \tau_e \in \{\log 10^{-2},\dots,\log 10^{2}\},
-\]
-while using linear grids for bounded parameters such as $\rho_c\in(0,1)$ (e.g., $\rho_c\in\{0.8,0.9,0.95,0.98\}$)
-and nonnegative multipliers such as $\kappa$ (e.g., $\kappa\in\{0,0.5,1,2\}$).
-When a full Cartesian grid is too large, use a coarse grid followed by a local refinement around the best region.
-
-\paragraph{Rolling-window evaluation.}
-To reflect nonstationarity, evaluate each candidate setting on rolling windows.
-For example, for each day $d$ in a validation range, fit using data up to day $d$ and score on day $d+1$
-(or score on a held-out subset of edges/pairs within day $d$).
-Aggregate scores with an exponential decay so that recent performance dominates:
-\[
-\mathrm{Score}(\theta)
-=
-\sum_{d\in\mathcal D_{\mathrm{val}}} \gamma^{(d_{\max}-d)}\,\mathrm{score}_d(\theta),
-\qquad 0<\gamma<1,
-\]
-where $\theta$ denotes a hyperparameter setting.
-
-\paragraph{Bandit allocation over hyperparameter ``arms.''}
-Instead of spending equal compute on all grid points, treat each candidate $\theta$ as an arm in a multi-armed bandit.
-Each day (or each evaluation batch), allocate a fixed compute budget by selecting a subset of arms to evaluate on the newest data.
-Let $r_d(\theta)$ be the reward (e.g., negative predictive loss, click-through proxy, or stability-adjusted utility).
-Maintain exponentially-decayed statistics
-\[
-\bar r_d(\theta)=\eta\bar r_{d-1}(\theta)+(1-\eta)r_d(\theta),
-\qquad
-N_d(\theta)=\eta N_{d-1}(\theta)+(1-\eta),
-\]
-with $0<\eta<1$.
-Selection can follow an explore--exploit rule such as decayed-UCB,
-\[
-\theta_d\in\arg\max_{\theta}\ \bar r_d(\theta)+c\sqrt{\frac{\log(1+d)}{\max\{N_d(\theta),\epsilon\}}}
-\]
-or an exponential-weights (Hedge) update,
-\[
-p_d(\theta)\propto p_{d-1}(\theta)\exp\big(\lambda\,r_d(\theta)\big),
-\]
-where $c,\epsilon,\lambda$ are tuning constants.
-The exponential decay emphasizes current conditions and allows rapid adaptation when user behavior shifts.
-
-\paragraph{Practical recipe.}
-Start with a small log-grid over $(\tau^2,\alpha,\tau_e)$ and a short list for $(\rho_c,\kappa)$.
-Run a few days of uniform exploration to initialize rewards, then switch to a decayed-UCB or exponential-weights bandit
-to focus compute on the most promising regions while still occasionally probing alternatives.
 
 \section{Discussion}
 This paper framed the ordering problem as inference of a drifting hidden preference state.
 Cold items were treated as a source of uncertainty rather than as deterministic stiffness.
 The resulting posterior provides both a daily best estimate order and calibrated uncertainty that can be used for conservative deployment rules.
+
+\appendix
+\section{Daily inference algorithm}
+\label{app:daily_inference}
+\begin{algorithm}[tbp]
+\centering
+\caption{Daily MAP + Laplace update for dynamic latent order inference}
+\label{alg:daily_inference}
+\begin{enumerate}
+\item \textbf{Build daily sufficient statistics.}
+From sessions on day $d$, compute the symmetric consecutive update counts $\widehat S_{ij}(d)$.
+Also compute per-item update counts $\widehat c_i(d)$, then update the decayed mass
+$c_i(d)=\rho_c c_i(d-1)+(1-\rho_c)\widehat c_i(d)$ and days-since-activity $t_i(d)$.
+
+\item \textbf{Compute exposures and Poisson intensities.}
+Form per-item exposures $\mathrm{expo}_i(d)=c_i(d)/(c_i(d)+\tau_e)$ and pair exposures
+$e_{ij}(d)=\mathrm{expo}_i(d)\mathrm{expo}_j(d)$.
+Given a current iterate $z$, define $\delta_{ij}(d)=|z_i-z_j|$ and
+$\lambda_{ij}(d)=e_{ij}(d)\exp\big(\beta(d)-\alpha\delta_{ij}(d)\big)$.
+In practice, $\beta(d)$ may be set by matching total mass or treated as an optimizable intercept.
+
+\item \textbf{Predict by prior propagation.}
+Set
+\[
+Q(d)=\mathrm{diag}\big(\tau^2 t_1(d),\dots,\tau^2 t_n(d)\big),
+\qquad
+m^-(d)=\widehat z(d-1),
+\]
+and use $P^-(d)=\Sigma(d-1)+Q(d)$.
+
+\item \textbf{Form the day-$d$ objective.}
+Define the constrained MAP objective
+\[
+\mathcal J_d(z)=\mathcal L_d(z)+\frac12\big(z-m^-(d)\big)^\top\big(P^-(d)\big)^{-1}\big(z-m^-(d)\big),
+\qquad \mathbf 1^\top z=0.
+\]
+
+\item \textbf{Solve the MAP problem.}
+Initialize $z^{(0)}\leftarrow m^-(d)$, projected to $\mathbf 1^\top z=0$ if necessary.
+For $k=0,1,2,\dots$ until convergence, compute
+\[
+\nabla\mathcal J_d(z)=\nabla\mathcal L_d(z)+\big(P^-(d)\big)^{-1}(z-m^-(d)),
+\qquad
+\nabla^2\mathcal J_d(z)=\nabla^2\mathcal L_d(z)+\big(P^-(d)\big)^{-1},
+\]
+then solve $\nabla^2\mathcal J_d(z)\,\Delta z=-\nabla\mathcal J_d(z)$, update $z\leftarrow z+\Delta z$, and re-center $z$.
+
+\item \textbf{Laplace covariance update.}
+Set $\Sigma(d)=\big(\nabla^2\mathcal J_d(\widehat z(d))\big)^{-1}$, or compute only selected entries by linear solves when $n$ is large.
+
+\item \textbf{Output an ordering.}
+Return either $\widehat\pi(d)=\mathrm{argsort}(\widehat z(d))$ or the conservative order
+$\pi_{\mathrm{LCB}}(d)=\mathrm{argsort}(s(d))$, where $s_i(d)=\widehat z_i(d)-\kappa\sqrt{\Sigma_{ii}(d)}$.
+\end{enumerate}
+\end{algorithm}
+
 
 \section*{References}
 \bibliographystyle{plainnat}

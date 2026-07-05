@@ -29,6 +29,9 @@ if (!slug || !sourceHtmlPath || !paperTitle || !paperKicker || !pdfName || !texN
 const rootDir = path.resolve(__dirname, "..");
 const outDir = path.join(rootDir, "docs", slug);
 const outPath = path.join(outDir, "paper.html");
+const sourceBasename = path.basename(sourceHtmlPath, ".html");
+const sourceDir = path.dirname(path.dirname(sourceHtmlPath));
+const sourceTexPath = path.join(sourceDir, `${sourceBasename}.tex`);
 
 const sourceHtml = fs.readFileSync(sourceHtmlPath, "utf8");
 const bodyMatch = sourceHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -55,8 +58,30 @@ function normalizeArticleHtml(html) {
     .trim();
 }
 
+function stripTrailingWhitespace(value) {
+  return value.replace(/[ \t]+$/gm, "");
+}
+
+function extractMathJaxMacros(texPath) {
+  if (!fs.existsSync(texPath)) return {};
+
+  const tex = fs.readFileSync(texPath, "utf8");
+  const macros = {};
+  const commandPattern = /\\(?:newcommand|renewcommand)\s*\{\\([A-Za-z]+)\}\s*(?:\[[^\]]+\]\s*)?\{((?:[^{}]|\{[^{}]*\})*)\}/g;
+  let match;
+
+  while ((match = commandPattern.exec(tex)) !== null) {
+    const [, name, definition] = match;
+
+    macros[name] = definition;
+  }
+
+  return macros;
+}
+
 const articleHtml = normalizeArticleHtml(bodyMatch[1]);
 const bodyText = articleHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+const mathJaxMacros = extractMathJaxMacros(sourceTexPath);
 
 if (bodyText.length < 500) {
   throw new Error(`Generated article for ${slug} looks too small to be valid.`);
@@ -88,6 +113,7 @@ const page = `<!doctype html>
       window.MathJax = {
         tex: {
           tags: "ams",
+          macros: ${JSON.stringify(mathJaxMacros, null, 12).replace(/\n/g, "\n          ")},
           inlineMath: [["\\\\(", "\\\\)"]],
           displayMath: [["\\\\[", "\\\\]"]],
           processEscapes: true
@@ -138,4 +164,4 @@ ${articleHtml}
 `;
 
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(outPath, page);
+fs.writeFileSync(outPath, stripTrailingWhitespace(page));
