@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates by Monysovann Ly.">
+    <title>SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../">Monysovann Ly Papers</a>
+      <nav class="nav" aria-label="Papers">
+        <a href="../five-laws/">Five Laws</a>
+        <a href="../sena/">SENA</a>
+        <a href="../scores/">SCORES</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="paper-hero">
+        <div class="paper-hero-inner">
+          <p class="eyebrow">Ordering / spectral methods</p>
+          <h1>SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates</h1>
+          <p class="lede">A two time scale formulation for online reordering while tracking a drifting physical shelf layout.</p>
+          <div class="actions">
+            <a class="button" href="scores.pdf">Open PDF</a>
+            <a class="button secondary" href="scores.pdf" download>Download PDF</a>
+            <a class="button secondary" href="scores.tex">View TeX</a>
+            <a class="button secondary" href="references.bib">View BibTeX</a>
+          </div>
+          <div class="meta-grid" aria-label="Paper metadata">
+            <div class="meta-item"><span class="meta-label">Author</span><span class="meta-value">Monysovann Ly</span></div>
+            <div class="meta-item"><span class="meta-label">Date</span><span class="meta-value">February 19, 2026</span></div>
+            <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PDF + TeX + BibTeX</span></div>
+            <div class="meta-item"><span class="meta-label">License</span><span class="meta-value">CC BY 4.0</span></div>
+          </div>
+          <img class="cover-preview" src="scores-cover.png" alt="First page preview for SCORES">
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="content two-column">
+          <article class="prose">
+            <h2>Abstract</h2>
+            <p>We study online reordering of a finite set of items to reduce user navigation time while remaining consistent with a drifting physical shelf layout. Raw swipe adjacency is a policy artifact, so the paper proposes learning proximity only from consecutive update events.</p>
+            <p>To obtain a solver with clean spectral structure, the paper replaces absolute distance costs by a Laplacian quadratic surrogate that diagonalizes in the graph Fourier basis. It then formulates a two time scale trajectory problem, with a slow shelf component and a fast app component coupled by a proximity term and controlled by temporal smoothness.</p>
+          </article>
+          <aside class="side">
+            <h2>Keywords</h2>
+            <p>Online reordering, spectral seriation, Laplacian quadratic surrogate, time frequency smoothing, drifting shelf inference, constrained swaps.</p>
+            <div class="source-list">
+              <a href="scores.tex">Primary TeX source</a>
+              <a href="references.bib">BibTeX references</a>
+              <a href="scores.pdf">PDF</a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="reader-heading">
+        <div class="reader">
+          <p class="eyebrow">Reader</p>
+          <h2 id="reader-heading">PDF preview</h2>
+          <p class="mobile-reader-note">PDF preview is disabled on narrow screens for performance. Use Open PDF above for the cleanest phone reading view.</p>
+          <object class="pdf-frame" data="scores.pdf" type="application/pdf">
+            <p><a href="scores.pdf">Open the PDF</a>.</p>
+          </object>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Paper content licensed under CC BY 4.0.</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,234 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\begin{document}
+
+\section*{Review of \texttt{main.tex}: SENA manuscript}
+
+\textbf{Overall assessment.}
+The manuscript is ambitious, substantially more implementation-aware than a typical concept note, and mostly internally coherent in its core inventory transition and LogNormal lead-time mapping.
+I explicitly checked symbol definitions, sign conventions, dimensional consistency, and implementation-facing formulas.
+I did not find inverse-trig or quadrant/branch issues because the manuscript does not use that class of expression, and I did not find a clear sign/factor error in the core inventory or lead-time equations.
+The highest-priority problems are instead a small number of concrete specification gaps and one true state-space bug that would change the model if implemented literally.
+
+\section*{Most important technical findings}
+
+\begin{enumerate}
+  \item \textbf{Definite error: a positive initial pipeline $B^{\mathrm{init}}_i$ cannot ever generate receipts.}
+
+  \textbf{Location:} the initial-state block in ``What SENA models'' and the receipt-assignment formula in ``Restocking as a policy with an explicit order pipeline.''
+
+  \textbf{Problem:} the manuscript allows
+  \[
+    B_{1,i}=B^{\mathrm{init}}_i,\qquad B^{\mathrm{init}}_i\ge 0,
+  \]
+  but later defines receipts only through post-$t_1$ order batches,
+  \[
+    R_{k,i}=\sum_{u=2}^{k} O_{u,i}\,\mathbf{1}\{t_{k-1}<a_{u,i}\le t_k\}.
+  \]
+  There is no latent pre-$t_1$ order history or residual-arrival distribution tied to $B^{\mathrm{init}}_i$.
+  If $B^{\mathrm{init}}_i>0$, those units have no mechanism to arrive.
+
+  \textbf{Why it matters:} early-interval receipts, pipeline depth, reorder propensity, and stockout risk are all biased if the model literally permits a positive initial in-transit state that is never receivable.
+  This is not just a missing prior; it is a state-transition inconsistency.
+
+  \textbf{Suggested fix:} either make $B^{\mathrm{init}}_i=0$ an enforced model assumption, or introduce latent pre-$t_1$ pseudo-orders / a residual arrival-time distribution whose outstanding mass equals $B^{\mathrm{init}}_i$.
+
+  \item \textbf{Definite error: the order-size location parameter $\mu^{O}_{k,i}$ is used but never defined.}
+
+  \textbf{Location:} the LogNormal order-size model in the replenishment section and the later ``Order size model'' discussion in the hyperparameter block.
+
+  \textbf{Problem:} the manuscript specifies
+  \[
+    O_{k,i}\mid(G_{k,i}=1)\sim\text{LogNormal}(\mu^{O}_{k,i},\sigma^{O}_i),
+  \]
+  but never defines what determines $\mu^{O}_{k,i}$, whether it is static or dynamic, whether it depends on the posterior gap to a target stock level, or what prior/transition it has.
+
+  \textbf{Why it matters:} this makes the generative model incomplete and leaves order-size inference non-reproducible.
+  Two implementations could choose fundamentally different order-quantity dynamics while both claiming to match the manuscript.
+
+  \textbf{Suggested fix:} define $\mu^{O}_{k,i}$ explicitly.
+  A natural option is to link it to a target inventory-position gap, e.g.
+  \[
+    \mu^{O}_{k,i}=\alpha^{O}_i+\beta^{O}_i\,\bigl(T_{k,i}-x_{k-1,i}-B_{k-1,i}\bigr)_+,
+  \]
+  or to a simpler SKU-specific baseline with clear priors if the paper wants a less policy-driven replenishment model.
+
+  \item \textbf{Definite mismatch: the lead-time variability observation is connected to the wrong latent quantity.}
+
+  \textbf{Location:} the ``Price and lead-time observations'' block, specifically the relative-width definition
+  \[
+    w_{k,i}=\frac{\tilde L^{\mathrm{hi}}_{k,i}-\tilde L^{\mathrm{lo}}_{k,i}}{\max\!\left\{\frac{\tilde L^{\mathrm{hi}}_{k,i}+\tilde L^{\mathrm{lo}}_{k,i}}{2},\ \epsilon_L\right\}},
+  \]
+  followed by the ordered-logit model on $\psi_{k,i}=\log v^L_{k,i}$.
+
+  \textbf{Problem:} $w_{k,i}$ is a \emph{scale-free relative-width} summary, but the observation model uses raw log-variance $\psi_{k,i}=\log v^L_{k,i}$ as its latent driver:
+  \[
+    \tilde c^L_{k,i}\sim\text{OrderedLogit}\!\bigl(a_{0,i}+a_{1,i}\psi_{k^{c,\star}_{k,i},i},\ \kappa_{1:C-1}\bigr).
+  \]
+  That means two SKUs with the same relative lead-time uncertainty but different mean lead times would imply the same observed range class and different latent predictors.
+
+  \textbf{Why it matters:} the model will systematically confound mean lead time with variability class.
+  This directly affects posterior uncertainty in arrivals and therefore stockout-risk and reorder calculations.
+
+  \textbf{Suggested fix:} drive the ordinal variability class with a scale-free quantity such as the LogNormal shape parameter $\sigma_{L,k,i}$ from the mean/variance map, or equivalently with
+  \[
+    \log\!\left(\frac{v^L_{k,i}}{(m^L_{k,i})^2}\right)
+  \]
+  (or $\log(1+v^L_{k,i}/(m^L_{k,i})^2)$ if you want exact compatibility with the LogNormal parameterization).
+
+  \item \textbf{Likely issue: the reorder trigger is not pipeline-aware, even though the later reorder-quantity rule is.}
+
+  \textbf{Location:} the planning outputs block, especially the trigger
+  \[
+    P\bigl(x_{k,i}\le \text{ROP}_{k,i}\mid\text{data}\bigr)
+  \]
+  versus the later inventory-position definition
+  \[
+    IP_{k,i}=x_{k,i}+B_{k,i}
+  \]
+  and need probability
+  \[
+    P\!\left(D^H_{k,i}>IP_{k,i}\mid\text{data}\right).
+  \]
+
+  \textbf{Problem:} the manuscript first defines a reorder trigger on \emph{on-hand} inventory only, but later defines reorder quantity from \emph{inventory position} (on-hand plus in-transit pipeline).
+  Those can disagree materially when there is already stock on order.
+
+  \textbf{Why it matters:} a low on-hand state with a large pipeline can trigger a reorder under the first rule even when the second rule correctly says no new order is needed.
+  That inconsistency is especially important because SENA explicitly models the pipeline rather than treating replenishment as instantaneous.
+
+  \textbf{Suggested fix:} either replace the trigger with
+  \[
+    P\bigl(IP_{k,i}\le \text{ROP}_{k,i}\mid\text{data}\bigr),
+  \]
+  or state clearly that the on-hand trigger is only a simplified no-open-order heuristic and that the inventory-position rule is the recommended operational output.
+
+  \item \textbf{Likely issue: within-interval stockout quantities are not fully defined by the current generative model.}
+
+  \textbf{Location:} the stockout-flag observation block and the output definition
+  \[
+    \text{SOR}_{k,i}\equiv P\Bigl(\min_{t\in[t_{k-1},t_k]}x_i(t)=0\ \Big|\ \text{data}\Bigr).
+  \]
+
+  \textbf{Problem:} receipt times have an explicit within-interval timestamp through $a_{u,i}$, but demand $D_{k,i}$ and corrections $A^{\mathrm{adj}}_{k,i}$ are modeled as interval aggregates.
+  The manuscript never specifies a within-interval arrival process for demand or a timing convention for adjustments.
+  As written, quantities involving $\min_t x_i(t)$ and stockout-flag likelihoods depend on unstated path assumptions.
+
+  \textbf{Why it matters:} stockout-risk outputs and the interpretation of stockout flags become implementation-dependent.
+  Two teams could use the same interval-level posterior draws and obtain different $\text{SOR}_{k,i}$ values just by choosing different intra-interval interpolation rules.
+
+  \textbf{Suggested fix:} specify one explicit within-interval approximation, e.g.
+  an inhomogeneous Poisson or renewal demand-arrival process inside $\Delta t_k$, receipt jumps at $a_{u,i}$, and a clear timing convention for $A^{\mathrm{adj}}_{k,i}$.
+  If that is outside scope, relabel $\text{SOR}_{k,i}$ as a proxy rather than a fully defined posterior quantity.
+
+  \item \textbf{Likely issue: the abrupt-drift block is still a modeling intention, not yet a generative specification.}
+
+  \textbf{Location:} ``Abrupt drift via occasional change points.''
+
+  \textbf{Problem:} the paper introduces
+  \[
+    c_k\sim\text{Bernoulli}(p_c)
+  \]
+  and says that $c_k=1$ allows a partial reset or jump, but it does not write the actual transition equations for the affected states, the reset distribution, or which components are permitted to jump.
+
+  \textbf{Why it matters:} this prevents reproducible implementation and makes the change-point ablation under-specified.
+  In the current form, the manuscript describes the intention to model abrupt drift without yet fully defining the model.
+
+  \textbf{Suggested fix:} add one compact mixture-transition block, for example for $\log\lambda_{k,j}$ (and any other jumping state), with explicit distributions under $c_k=0$ and $c_k=1$.
+\end{enumerate}
+
+\section*{Notation drift snapshot (required check)}
+
+\begin{itemize}
+  \item \textbf{$\beta$.} The symbol first appears as the time-varying stock-sensitivity coefficient $\beta_{k,i}$ in the order-placement policy, later as the price elasticities $\beta^{\mathrm{svc}}_j$ and $\beta^{\mathrm{ret}}_i$, and later again as the target cycle service level in the planning section.
+  Even though the equations are locally readable, the same symbol is carrying three unrelated meanings.
+  \textbf{Suggested fix:} rename the service-level target to something like $\alpha_{\mathrm{SL}}$ or $p_{\mathrm{SL}}$.
+
+  \item \textbf{$\tau$.} The symbol is used first as the ranking-temperature parameter in the ordinal likelihood and later as the gating threshold in the reorder recommendation.
+  \textbf{Suggested fix:} keep $\tau$ (or $\tau_{\mathrm{rank}}$) for ranking noise and rename the reorder gate to $\tau_{\mathrm{gate}}$ or $p_0$.
+\end{itemize}
+
+\section*{Meaningful editorial findings}
+
+\begin{enumerate}
+  \item \textbf{Location:} abstract and contribution-summary language versus the later ``Evaluation protocol for publication readiness'' section.
+
+  \textbf{Problem:} the opening pages read like a validated method description, but the manuscript later makes clear that empirical validation is still proposed rather than reported.
+
+  \textbf{Why it matters:} this creates avoidable claim-strength tension.
+  Readers may reasonably expect experimental evidence that is not actually present in the draft.
+
+  \textbf{Suggested fix:} mark the paper more explicitly as a proposed model specification until the evaluation section is executed.
+
+  \textbf{Candidate rewrite:} ``SENA is a proposed Bayesian generative model for sparse-stock settings; its intended outputs are posterior inventory trajectories, demand-rate estimates, stockout-risk summaries, and replenishment recommendations under uncertainty.''
+
+  \item \textbf{Location:} opening of ``Inventory dynamics.''
+
+  \textbf{Problem:} the setup around the first transition equations is awkwardly split across two short framing sentences:
+  ``For each SKU $i$, with initial states $(x_{1,i},B_{1,i})$ and transitions over $k=2,\dots,K$:'' immediately followed by ``For all recursions in this section, $k=2,\dots,K$ unless otherwise stated.''
+
+  \textbf{Why it matters:} this is small, but it makes the key model-definition section feel less polished than the mathematics deserves.
+
+  \textbf{Suggested fix:} collapse the frame into one sentence.
+
+  \textbf{Candidate rewrite:} ``For each SKU $i$, with initial states $(x_{1,i},B_{1,i})$, the transition recursions below apply for $k=2,\dots,K$ unless otherwise stated.''
+
+  \item \textbf{Location:} adjustment hyperparameter description in the default-priors section.
+
+  \textbf{Problem:} the text describes $s^{\mathrm{adj}}_{r,i}$ as being ``in SKU units,'' but the model uses
+  \[
+    A^{\mathrm{adj}}_{k,i}\sim\text{Normal}\bigl(m^{\mathrm{adj}}_{r,i}\,\Delta t_k,(s^{\mathrm{adj}}_{r,i})^2\,\Delta t_k\bigr),
+  \]
+  so the implied standard deviation is $s^{\mathrm{adj}}_{r,i}\sqrt{\Delta t_k}$.
+
+  \textbf{Why it matters:} this affects how readers elicit priors and interpret units under irregular intervals.
+
+  \textbf{Suggested fix:} describe $s^{\mathrm{adj}}_{r,i}$ as a diffusion-scale parameter, or state explicitly that the interval-level standard deviation is $s^{\mathrm{adj}}_{r,i}\sqrt{\Delta t_k}$.
+
+  \textbf{Candidate rewrite:} ``Here $s^{\mathrm{adj}}_{r,i}>0$ is the unit-time diffusion scale for corrections; over interval $\Delta t_k$, the correction standard deviation is $s^{\mathrm{adj}}_{r,i}\sqrt{\Delta t_k}$.''
+\end{enumerate}
+
+\section*{Proofing sweep (required scan)}
+
+I ran the required scan on \texttt{main.pdf}, \texttt{main.tex}, and \texttt{refs.bib}, then spot-checked the hits.
+The PDF scan was dominated by false positives from table-of-contents dot leaders, so the source-text scan was more informative.
+I did not find duplicated-punctuation or malformed-title defects in \texttt{refs.bib}.
+
+\begin{itemize}
+  \item \textbf{Location:} concluding sentence of ``Promotion-bundles as explicit services.''
+
+  \textbf{Problem:} the scanner correctly flags the semicolon in ``expected to improve identifiability and interpretability; the evaluation section specifies ablations \dots'' as a semicolon-capitalization seam.
+
+  \textbf{Suggested fix:} split this into two sentences or replace the semicolon with an em dash.
+
+  \item \textbf{Location:} the paragraph immediately following the relative-range equation in the lead-time observation block.
+
+  \textbf{Problem:} the lower-case ``where $\epsilon_L>0$ \dots'' reads like a display-fragment rather than a complete sentence.
+
+  \textbf{Suggested fix:} rewrite as ``Here, $\epsilon_L>0$ is a fixed lead-time floor \dots'' or attach the clause more tightly to the preceding sentence.
+\end{itemize}
+
+\section*{Highest-priority fixes}
+
+\begin{enumerate}
+  \item Give the initial pipeline a real receipt mechanism, or enforce $B^{\mathrm{init}}_i=0$ throughout the model.
+  \item Define $\mu^{O}_{k,i}$ explicitly.
+  \item Re-map ordinal lead-time variability inputs to a scale-free latent variability quantity.
+  \item Make the reorder trigger pipeline-aware.
+  \item Specify the within-interval path assumptions used for stockout risk and stockout flags.
+  \item Add explicit post-change transition equations for abrupt drift.
+\end{enumerate}
+
+\section*{Items needing external verification}
+
+I did not identify an outside factual claim that is clearly wrong on its face.
+The main issues are internal consistency and implementation specificity.
+The one class of claims that still needs verification is empirical: statements that promo/bundle modeling improves identifiability or decision quality should stay framed as hypotheses until the evaluation protocol is actually run.
+
+\end{document}

@@ -1,0 +1,152 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\begin{document}
+
+\section*{Review: \textit{SENA: Sparse-stock Estimation with Nonstationary Adaptation}}
+
+\subsection*{Overall assessment}
+This is a strong and practically motivated modeling draft with good scope coverage (inventory dynamics, drift, lead-time uncertainty, optional signals, and decision outputs). The main weaknesses are internal mathematical consistency and implementation-facing ambiguity in a few high-impact equations. Technical fixes below should be prioritized before publication-level claims about decision quality or identifiability.
+
+\subsection*{Most important technical findings}
+\begin{enumerate}[leftmargin=*]
+
+\item \textbf{Definite error: output decomposition conflicts with the stated state transition.}
+
+\textbf{Location:} ``What SENA outputs for a single user,'' change decomposition equation ($\Delta x_{k,i}=R_{k,i}-D_{k,i}+A^{\mathrm{adj}}_{k,i}$), versus inventory transition in ``Inventory dynamics'' ($C_{k,i}=\min\{D_{k,i},x_{k-1,i}+R_{k,i}\}$ and $x_{k,i}=\max\{0,x_{k-1,i}+R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i}\}$).
+
+\textbf{Problem:} The output decomposition subtracts unconstrained demand $D_{k,i}$, but the generative transition subtracts realized consumption $C_{k,i}$.
+
+\textbf{Why it matters:} This breaks internal consistency and can misattribute stockout effects in diagnostics.
+
+\textbf{Suggested fix:} Replace with
+\[
+\Delta x_{k,i}=R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i},\quad C_{k,i}=\min\{D_{k,i},x_{k-1,i}+R_{k,i}\},
+\]
+and optionally report unmet demand $U^{\mathrm{lost}}_{k,i}=D_{k,i}-C_{k,i}$ as a separate quantity.
+
+\item \textbf{Definite consistency issue: revenue formula is not aligned with stockout-censoring semantics.}
+
+\textbf{Location:} Regime definition for ``stockout-constrained'' (latent demand can exceed realized sales/usage) versus revenue equation $\text{Rev}_k=\sum_j p^{\mathrm{svc}}_{k,j}S_{k,j}+\sum_i p^{\mathrm{ret}}_{k,i}Q_{k,i}$.
+
+\textbf{Problem:} If $S_{k,j}$ and $Q_{k,i}$ are latent demand-side quantities, revenue is overstated during stockouts; if they are realized sales, that must be stated explicitly and made consistent with censoring equations.
+
+\textbf{Why it matters:} Revenue/profit outputs are central planning outputs; this ambiguity changes downstream policy recommendations.
+
+\textbf{Suggested fix:} Introduce explicit realized-sales variables (or explicitly redefine $S,Q$ as realized), and compute revenue from realized quantities only.
+
+\item \textbf{Likely issue: irregular-time statement is inconsistent with innovation scaling.}
+
+\textbf{Location:} Early definition of irregular gaps ($\Delta t_k$), intensity drift equations, and adjustment model.
+
+\textbf{Problem:} The model states irregular intervals, but drift innovations are not scaled by $\Delta t_k$ (or $\sqrt{\Delta t_k}$), and adjustment variance is not interval-scaled while its mean is.
+
+\textbf{Why it matters:} Posterior behavior becomes reporting-frequency dependent; the same process sampled at different cadences yields different implied volatility.
+
+\textbf{Suggested fix:} Either (a) adopt continuous-time-consistent scaling, e.g. innovation scale $\propto\sqrt{\Delta t_k}$ and adjustment variance $\propto\Delta t_k$, or (b) explicitly assume approximately constant interval length and state that limitation.
+
+\item \textbf{Likely issue: lead-time distribution is under-specified for implementation.}
+
+\textbf{Location:} $L^{\mathrm{ord}}_{u,i}\sim\mathcal{D}(m^L_{u,i},v^L_{u,i})$ and downstream use of $L_{k,i}\sim\mathcal{D}(m^L_{k,i},v^L_{k,i})$.
+
+\textbf{Problem:} $\mathcal{D}$ is not concretely defined (family, parameter mapping, support/discretization).
+
+\textbf{Why it matters:} Different implementations can produce materially different receipt timing and reorder uncertainty even with identical symbols.
+
+\textbf{Suggested fix:} Name one default family (e.g., LogNormal or Gamma), give explicit map from $(m^L,v^L)$ to distribution parameters, and state whether lead time is continuous or integer-valued for interval assignment.
+
+\item \textbf{Likely issue: safety-stock approximation is inconsistent with the preceding product approximation.}
+
+\textbf{Location:} In reorder section, $D^{\mathrm{LT}}_{k,i}\approx d_{k,i}L_{k,i}$ followed by
+\[
+\text{SS}_{k,i}\approx z_\beta\sqrt{E[L_{k,i}]\,\mathrm{Var}(d_{k,i})+(E[d_{k,i}])^2\mathrm{Var}(L_{k,i})}.
+\]
+
+\textbf{Problem:} If $D^{\mathrm{LT}}\approx dL$ is the approximation being used, the variance expression should be made consistent with that product model (or the assumptions should be changed and stated).
+
+\textbf{Why it matters:} Inconsistent approximations can under- or over-state buffer stock and trigger frequency.
+
+\textbf{Suggested fix:} Either (i) keep the product model and use a variance formula consistent with it (including stated independence/covariance assumptions), or (ii) redefine $d$ as per-period demand in a summed lead-time-demand model and present the corresponding standard formula clearly.
+
+\item \textbf{Likely issue: regime-parameter indexing is ambiguous.}
+
+\textbf{Location:} $\kappa_{z_k,j}$, $\phi_{z_k,i}$, and priors written directly on $\kappa_{z_k,j},\phi_{z_k,i}$.
+
+\textbf{Problem:} Notation suggests per-interval parameters when intent appears to be regime-specific parameters.
+
+\textbf{Why it matters:} This can inflate parameter count accidentally and change identifiability/computation.
+
+\textbf{Suggested fix:} Define regime index $r\in\{1,\dots,R\}$ with parameters $\kappa_{r,j},\phi_{r,i}$ (and similarly for adjustment parameters), then evaluate $\kappa_{z_k,j}$ inside likelihood terms only.
+
+\item \textbf{Definite ambiguity: $\text{age}_{k,i}$ is used but not formally defined.}
+
+\textbf{Location:} Logistic order-placement equation and later hyperparameter interpretation.
+
+\textbf{Problem:} The state/update rule for $\text{age}_{k,i}$ (units, initialization, reset event) is missing.
+
+\textbf{Why it matters:} Policy behavior and coefficient interpretation are not reproducible without this definition.
+
+\textbf{Suggested fix:} Add an explicit definition (e.g., time since last placement, increment by $\Delta t_k$, reset to 0 when $G_{k,i}=1$), including initialization.
+
+\item \textbf{Unsupported claim strength in motivation language.}
+
+\textbf{Location:} Promotions section motivation sentence claiming explicit modeling ``prevents'' misattribution and ``improves identifiability.''
+
+\textbf{Problem:} This is stronger than what is shown in the manuscript (evaluation is proposed but no empirical results are provided here).
+
+\textbf{Why it matters:} Overstated causal language weakens scientific calibration.
+
+\textbf{Suggested fix:} Soften to ``can reduce misattribution risk'' / ``can improve identifiability'' and point to the evaluation protocol as the test plan.
+
+\end{enumerate}
+
+\subsection*{Meaningful editorial findings}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Location:} Recipe usage notation in stochastic-recipe and sharing-mask subsections.
+
+\textbf{Problem:} The text alternates between $U_{k,j,i}$ (described as per-instance) and $U^{(m)}_{k,j,i}$ without a single canonical declaration.
+
+\textbf{Why it matters:} This creates avoidable implementation ambiguity at a key modeling interface.
+
+\textbf{Suggested fix:} Declare one canonical object up front: per-instance usage $U^{(m)}_{k,j,i}$ and (optionally) interval-level aggregate $\bar U_{k,j,i}=\sum_m U^{(m)}_{k,j,i}$.
+
+\item \textbf{Location:} Revenue section sentence ``Section on drift handling.''
+
+\textbf{Problem:} Non-specific cross-reference text instead of a label-based reference.
+
+\textbf{Why it matters:} Breaks maintainability when section titles change.
+
+\textbf{Suggested fix:} Add a label to the drift section and replace with ``Section~\textbackslash ref\{...\}.''
+
+\item \textbf{Location:} Bibliography hygiene check (all entries in \texttt{refs.bib}).
+
+\textbf{Problem:} No duplicated punctuation / malformed quoted-title artifacts were found.
+
+\textbf{Why it matters:} Confirms reference-list copy quality is publication-ready at the micro-proofing level.
+
+\textbf{Suggested fix:} No change required.
+\end{enumerate}
+
+\subsection*{Proofing-sweep (required micro-scan)}
+I ran the bundled pattern scanner (\texttt{scripts/proofing\_scan.py}) on both source text and bibliography.
+
+\begin{itemize}[leftmargin=*]
+\item \texttt{main.tex}: no high-confidence pattern hits.
+\item \texttt{refs.bib}: no high-confidence pattern hits.
+\item \texttt{main.pdf}: scanner returned many ``double period'' hits from table-of-contents dot leaders; spot-check confirms these are formatting artifacts, not manuscript punctuation defects.
+\end{itemize}
+
+\subsection*{Highest-priority fixes before submission}
+\begin{enumerate}[leftmargin=*]
+\item Fix the inventory-change output equation to use realized consumption $C_{k,i}$ (not unconstrained $D_{k,i}$).
+\item Resolve demand-vs-realized-sales semantics for revenue/profit calculations under stockout censoring.
+\item Make time-scaling assumptions explicit and consistent for irregular intervals (drift and adjustment noise).
+\item Fully specify lead-time distribution parameterization and discretization conventions.
+\end{enumerate}
+
+\subsection*{Items needing external verification}
+No external-fact claims were identified that require literature lookup to classify the main issues above; the highest-priority findings are internal mathematical/notation consistency issues.
+
+\end{document}

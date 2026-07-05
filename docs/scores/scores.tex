@@ -1,0 +1,351 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage[numbers]{natbib}
+
+\title{SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates}
+\author{Monysovann Ly}
+\date{February 19, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study online reordering of a finite set of items to reduce user navigation time while remaining consistent with a drifting physical shelf layout.
+We argue that raw swipe adjacency is a policy artifact and propose learning proximity only from consecutive \emph{update events}.
+To obtain a solver with clean spectral structure, we replace absolute distance costs by a Laplacian quadratic surrogate that diagonalizes in the graph Fourier basis \citep{BelkinNiyogi2002LaplacianEigenmaps,ShiMalik2000NormalizedCuts}.
+We then formulate a two time scale trajectory problem, with a slow shelf component and a fast app component coupled by a proximity term and controlled by temporal smoothness.
+The resulting regularizers diagonalize in the time frequency domain, yielding an explicit low pass interpretation for shelf drift \citep{HodrickPrescott1997PostwarUSBusinessCycles,RavnUhlig2002HPfilterLambda}.
+A practical solution is a two stage pipeline: spectral embeddings for daily structure, temporal smoothing for shelf inference, then constrained local swaps to produce valid permutations with disruption caps and protection for cold items.
+\end{abstract}
+
+\paragraph{Keywords.}
+Online reordering; spectral seriation; Laplacian quadratic surrogate; time frequency smoothing; drifting shelf inference; constrained swaps.
+
+\tableofcontents
+\bigskip
+
+\section{Setup}
+\subsection{Items and permutations}
+Let $[n]:=\{1,\dots,n\}$ index items.
+An ordering is a permutation $\pi$ of $[n]$.
+Write $\mathrm{pos}_{\pi}(i)\in[n]$ for the position of item $i$ under $\pi$.
+
+\subsection{Sessions, updates, and why swipe adjacency is not the right signal}
+A session is a sequence of visited items $(v_1,\dots,v_m)$ with action indicators $a_t\in\{0,1\}$ where $a_t=1$ denotes an \emph{update event}.
+The swipe path $(v_t)$ depends strongly on the current UI order, so transition counts between consecutive swipes largely reflect current adjacency rather than user intent.
+
+We therefore base learning on the subsequence of \emph{consecutive updates}.
+Let $t_1<\cdots<t_k$ be indices with $a_{t_r}=1$.
+Define the update sequence
+\[
+u_r := v_{t_r},\qquad r=1,\dots,k.
+\]
+Optionally, collapse consecutive repeats by removing $u_{r+1}$ whenever $u_{r+1}=u_r$.
+Let $\Delta_r\ge 0$ be the time between update events $r$ and $r+1$.
+
+\subsection{Update adjacency weights}
+Define a robust weight function $w(\Delta)$, for example $w(\Delta)=1$ for counts, or $w(\Delta)=\min(\Delta,c)$ for clipped time.
+For a day index $d$, define symmetric update adjacency weights
+\[
+\widehat{S}_{ij}(d)
+:=
+\sum_{\text{sessions on day }d}\ \sum_{r=1}^{k-1}
+\mathbf{1}\{u_r=i,\ u_{r+1}=j\}\,w(\Delta_r)
+\;+\;
+\mathbf{1}\{u_r=j,\ u_{r+1}=i\}\,w(\Delta_r).
+\]
+This captures proximity only between items that are edited consecutively, which is the quantity the UI order can realistically reduce.
+
+\subsection{Two half lives: fast evidence and slow evidence}
+To support two time scales, maintain two exponentially weighted estimates:
+\[
+S^{\text{fast}}(d) = \rho_f S^{\text{fast}}(d-1) + (1-\rho_f)\widehat{S}(d),
+\qquad
+S^{\text{slow}}(d) = \rho_s S^{\text{slow}}(d-1) + (1-\rho_s)\widehat{S}(d),
+\]
+with $0<\rho_f<\rho_s<1$.
+$\rho_f$ reacts quickly to short term changes and $\rho_s$ captures persistent structure.
+
+For cold item protection we also maintain a decayed update mass
+\[
+c_i(d) = \rho_c c_i(d-1) + (1-\rho_c)\widehat{c}_i(d),
+\qquad
+\widehat{c}_i(d) := \sum_{\text{sessions on day }d}\sum_{r=1}^{k}\mathbf{1}\{u_r=i\}.
+\]
+
+\section{Quadratic surrogate that diagonalizes on graphs}
+\subsection{Laplacians}
+Given a symmetric similarity matrix $S(d)$, define degree $D(d)=\mathrm{diag}(S(d)\mathbf{1})$ and Laplacian
+\[
+L(d) := D(d) - S(d).
+\]
+For an embedding vector $x\in\mathbb{R}^n$,
+\[
+x^\top L(d) x = \frac12\sum_{i=1}^n\sum_{j=1}^n S_{ij}(d)\,(x_i-x_j)^2.
+\]
+This is the squared distance surrogate. It is quadratic and diagonalizes in the eigenbasis of $L(d)$. Such Laplacian quadratic forms underpin many spectral embedding and clustering relaxations \citep{BelkinNiyogi2002LaplacianEigenmaps,ShiMalik2000NormalizedCuts,DhillonGuanKulis2004KernelKmeansSpectral}.
+
+\subsection{From embeddings to permutations}
+Given an embedding $x$, define the induced ordering
+\[
+\pi(x) := \mathrm{argsort}(x),
+\]
+sorting items by $x_i$.
+Spectral seriation uses the Fiedler vector, an eigenvector associated with the second smallest eigenvalue of $L(d)$:
+\[
+x^{\star}(d)\in\arg\min_{x\perp\mathbf{1},\ \|x\|_2=1} x^\top L(d) x.
+\]
+We use $L^{\text{fast}}(d)$ for daily structure and $L^{\text{slow}}(d)$ for shelf structure. For additional seriation-oriented discussion and tooling, see \citet{ConcasFenuRodriguez2017PQSER,ConcasFenuRodriguezVandebril2022DoubleFiedler}.
+
+\section{Trajectory formulation with slow shelf and fast app components}
+\subsection{State variables}
+For each day $d\in\{0,\dots,D-1\}$:
+\begin{enumerate}
+\item $x_a(d)\in\mathbb{R}^n$ is the fast app embedding.
+\item $x_s(d)\in\mathbb{R}^n$ is the slow shelf embedding.
+\item $\pi_a(d)=\pi(x_a(d))$ is the shown order after rounding and constraints.
+\item $\pi_s(d)=\pi(x_s(d))$ is the inferred shelf order after rounding.
+\end{enumerate}
+
+\subsection{Time domain objective}
+We propose the following quadratic trajectory objective:
+\begin{align}
+\min_{\{x_a(d),x_s(d)\}}
+\ &\sum_{d=0}^{D-1} x_a(d)^\top L^{\text{fast}}(d)\,x_a(d)
+\;+\;
+\sum_{d=0}^{D-1} x_s(d)^\top L^{\text{slow}}(d)\,x_s(d)
+\label{eq:data_terms}
+\\
+&\;+\;
+\sum_{d=0}^{D-1} \|x_a(d)-x_s(d)\|_{\Gamma(d)}^2
+\label{eq:coupling}
+\\
+&\;+\;
+\sum_{d=1}^{D-1} \|x_s(d)-x_s(d-1)\|_{K(d)}^2
+\;+\;
+\sum_{d=2}^{D-1} \|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H(d)}^2.
+\label{eq:temporal_smooth}
+\end{align}
+Constraints per day:
+\[
+x_a(d)\perp\mathbf{1},\ \|x_a(d)\|_2=1,
+\qquad
+x_s(d)\perp\mathbf{1},\ \|x_s(d)\|_2=1.
+\]
+
+Here $\|z\|_{M}^2 := z^\top M z$ with diagonal positive semidefinite matrices:
+\begin{enumerate}
+\item $\Gamma(d)$ couples app and shelf.
+\item $K(d)$ penalizes shelf velocity.
+\item $H(d)$ penalizes shelf acceleration.
+\end{enumerate}
+Item wise cold protection enters by setting diagonal weights as increasing functions of low activity.
+A simple choice is
+\[
+\Gamma_{ii}(d)=\gamma\,\lambda_i(d),\quad
+K_{ii}(d)=\kappa\,\lambda_i(d),\quad
+H_{ii}(d)=\eta\,\lambda_i(d),
+\]
+with $\lambda_i(d)$ large when $c_i(d)$ is small, for example
+\[
+\lambda_i(d)=\lambda_{\max}\exp(-\beta c_i(d)).
+\]
+Cold items then resist both injection and drift.
+
+\section{Frequency domain view of shelf drift}
+This section explains the slow and fast split in time frequency terms.
+For clarity, ignore the graph data terms \eqref{eq:data_terms} and consider the shelf smoothing subproblem with $x_a(d)$ fixed:
+\begin{equation}
+\min_{\{x_s(d)\}}
+\ \sum_{d=0}^{D-1}\|x_a(d)-x_s(d)\|_{\Gamma}^2
++
+\sum_{d=1}^{D-1}\|x_s(d)-x_s(d-1)\|_{K}^2
++
+\sum_{d=2}^{D-1}\|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H}^2,
+\label{eq:shelf_smooth_only}
+\end{equation}
+with constant diagonal weights $\Gamma,K,H$ for exposition.
+
+Let $X_a(\omega)$ and $X_s(\omega)$ be the discrete Fourier transforms over $d$ applied coordinate wise.
+Define
+\[
+g(\omega)=4\sin^2(\pi\omega/D).
+\]
+Then the first difference term contributes a factor $g(\omega)$ and the second difference contributes $g(\omega)^2$. This ``trend--cycle'' style smoothing viewpoint is closely related to second-difference penalization as in the Hodrick--Prescott filter \citep{HodrickPrescott1997PostwarUSBusinessCycles,RavnUhlig2002HPfilterLambda}.
+The objective \eqref{eq:shelf_smooth_only} diagonalizes by $\omega$ and by coordinate:
+\[
+\sum_{\omega=0}^{D-1}
+\left(
+\|X_a(\omega)-X_s(\omega)\|_{\Gamma}^2
++
+g(\omega)\|X_s(\omega)\|_{K}^2
++
+g(\omega)^2\|X_s(\omega)\|_{H}^2
+\right).
+\]
+The minimizer has the explicit low pass form, coordinate wise:
+\[
+X_{s,i}(\omega) =
+\frac{\Gamma_{ii}}{\Gamma_{ii}+K_{ii}\,g(\omega)+H_{ii}\,g(\omega)^2}\ X_{a,i}(\omega).
+\]
+Low frequencies with small $g(\omega)$ pass into the shelf, high frequencies are suppressed.
+The residual $X_a(\omega)-X_s(\omega)$ is a complementary high pass, which is the fast component injected into the UI.
+
+\section{Practical solver}
+\subsection{Stage 1: build Laplacians from update events}
+On each day $d$:
+\begin{enumerate}
+\item Parse sessions to obtain update sequences $(u_r)$ and inter update times $\Delta_r$.
+\item Accumulate $\widehat{S}(d)$ via consecutive updates.
+\item Update $S^{\text{fast}}(d)$ and $S^{\text{slow}}(d)$ with two forgetting factors.
+\item Form Laplacians $L^{\text{fast}}(d)$ and $L^{\text{slow}}(d)$.
+\end{enumerate}
+
+\subsection{Stage 2: spectral embeddings}
+Compute daily fast embedding $x_a^{(0)}(d)$ as the Fiedler vector of $L^{\text{fast}}(d)$.
+Compute daily slow embedding $x_s^{(0)}(d)$ as the Fiedler vector of $L^{\text{slow}}(d)$.
+
+These are graph frequency solutions, diagonalized by the eigenbasis of each Laplacian.
+
+\subsection{Stage 3: infer a drifting shelf by time frequency smoothing}
+Use \eqref{eq:shelf_smooth_only} to smooth the slow embedding trajectory over time.
+There are two equivalent implementations:
+\begin{enumerate}
+\item Frequency domain: take the DFT over $d$, apply the low pass gain above coordinate wise, then invert the DFT.
+\item Time domain: solve the banded normal equations induced by \eqref{eq:shelf_smooth_only}, separately for each coordinate.
+\end{enumerate}
+Denote the smoothed result by $x_s(d)$ and set $\pi_s(d)=\pi(x_s(d))$.
+
+\subsection{Stage 4: inject fast improvements onto the shelf with hard caps}
+We produce a valid shown permutation by starting from the shelf order and applying a bounded number of local moves guided by the fast objective.
+Let $\pi\gets\pi_s(d)$.
+
+Define a discrete fast score for swaps using the update adjacency weights:
+\[
+\widetilde{J}_{\text{fast}}(\pi;d) := \sum_{i<j} S^{\text{fast}}_{ij}(d)\ \big(\mathrm{pos}_{\pi}(i)-\mathrm{pos}_{\pi}(j)\big)^2,
+\]
+which is consistent with the quadratic surrogate.
+
+Apply constrained local search:
+\begin{enumerate}
+\item Choose a daily swap budget $B$ and a window radius $w$.
+\item Restrict candidate swaps to pairs within $w$ positions in the current order.
+\item Enforce a per item displacement cap $r_i(d)$ relative to $\pi_s(d)$, with small caps for cold items.
+\item Accept a swap only if it reduces $\widetilde{J}_{\text{fast}}(\pi;d)$ and respects caps.
+\end{enumerate}
+Return $\pi_a(d)=\pi$.
+
+This injection step yields fast adaptation without rewriting the shelf.
+Cold items remain stable because they rarely participate in beneficial swaps and their displacement caps are small.
+
+\subsection{Complexity}
+For sparse $S(d)$ the Laplacian is sparse.
+Computing a Fiedler vector can be done with iterative methods whose dominant cost is sparse matrix vector products.
+The swap phase can be implemented with incremental score updates that touch only edges incident to swapped items.
+
+\section{Notes on calibration}
+\subsection{Hyperparameters to calibrate}
+This model has several tunable hyperparameters that control (i) how evidence is aggregated in time, (ii) how strongly the shelf is smoothed, and (iii) how disruptive the fast ``injection'' step is allowed to be.
+The main quantities to calibrate are:
+\begin{itemize}
+\item \textbf{Update-pair weighting:} parameters inside $w(\Delta)$ (e.g., clip level $c$ if using $w(\Delta)=\min(\Delta,c)$, or any other robust time-to-weight map).
+\item \textbf{Fast/slow evidence time scales:} forgetting factors $\rho_f$ (fast) and $\rho_s$ (slow).
+\item \textbf{Cold-item mass time scale:} forgetting factor $\rho_c$ used in $c_i(d)$.
+\item \textbf{Shelf smoothing strength:} the trajectory regularization weights in the shelf smoother (e.g., $\lambda_1,\lambda_2$ in \eqref{eq:shelf_smooth_only}, or equivalently any frequency-domain low-pass cutoff parameter).
+\item \textbf{Swap-search aggressiveness:} daily swap budget $B$ and window radius $w$.
+\item \textbf{Displacement-cap schedule:} cap endpoints $r_{\min},r_{\max}$ and the coldness scale $\tau_c$ used in $r_i(d)$.
+\end{itemize}
+
+\subsection{Online hyperparameter calibration via a multi-armed bandit}
+\label{sec:mab_calibration}
+
+We calibrate the SCORES hyperparameters online using a multi-armed bandit (MAB).
+Each arm corresponds to a full configuration of discrete hyperparameter choices drawn from plausible ranges.
+The bandit chooses a configuration each day, we run the SCORES solver with that configuration, deploy the resulting ordering, then observe a binary improvement label from user interaction metrics.
+
+\paragraph{Arms as discrete configurations.}
+Let $\theta$ denote the vector of tunable hyperparameters, for example clipping inside $w(\Delta)$, forgetting factors $(\rho_f,\rho_s,\rho_c)$, shelf smoothing strengths, swap budget $B$, window radius $w$, and displacement cap parameters.
+For each coordinate $\theta_j$, choose a small discrete set $\mathcal{G}_j$ of plausible values.
+The candidate configuration set is then
+\[
+\Theta := \mathcal{G}_1 \times \cdots \times \mathcal{G}_p.
+\]
+Each arm $a\in[A]$ corresponds to one configuration $\theta^{(a)}\in\Theta$.
+If $|\Theta|$ is too large, we subsample a manageable set of arms by randomized selection or a space filling design over the discrete grid.
+
+\paragraph{Daily decision loop.}
+On day $d$, the bandit selects an arm $a_d$ and therefore a configuration $\theta^{(a_d)}$.
+We then run the full SCORES pipeline using $\theta^{(a_d)}$ and deploy the resulting shown permutation:
+\[
+\pi_a(d) \;=\; \mathrm{SCORES}\big(\widehat{S}(d),\ S^{\mathrm{fast}}(d),\ S^{\mathrm{slow}}(d),\ c(d);\ \theta^{(a_d)}\big).
+\]
+All safety constraints remain enforced by the SCORES solver, including bounded swap budgets and per item displacement caps.
+
+\paragraph{Binary improvement label as reward.}
+Let $T(d)$ be the total time spent in the update view on day $d$, and let $W(d)$ be the total number of swipes on day $d$.
+We define a binary ground truth improvement label
+\[
+y_d :=
+\mathbf{1}\Big\{ T(d) < T(d-1)\ \ \text{or}\ \ W(d) < W(d-1)\Big\},
+\]
+with $y_d=0$ otherwise.
+This label serves as the bandit reward.
+The goal is to choose configurations that maximize the probability of improvement.
+
+\paragraph{Bandit update and selection rule.}
+We model each arm as a Bernoulli process with unknown success probability $p_a$.
+A simple and effective choice is Thompson sampling with independent Beta posteriors:
+\[
+p_a \sim \mathrm{Beta}(\alpha_a,\beta_a).
+\]
+Initialize $(\alpha_a,\beta_a)$ to small pseudo counts, for example $\alpha_a=\beta_a=1$.
+Each day:
+\begin{enumerate}
+\item For each arm $a$, sample $\widetilde{p}_a \sim \mathrm{Beta}(\alpha_a,\beta_a)$.
+\item Select $a_d \in \arg\max_a \widetilde{p}_a$.
+\item Deploy SCORES using $\theta^{(a_d)}$ and observe $y_d$.
+\item Update only the played arm:
+\[
+\alpha_{a_d} \leftarrow \alpha_{a_d} + y_d,
+\qquad
+\beta_{a_d} \leftarrow \beta_{a_d} + (1-y_d).
+\]
+\end{enumerate}
+This produces an exploration exploitation tradeoff automatically, favoring arms with high estimated improvement probability while still exploring uncertain arms.
+
+\paragraph{Stopping and locking the configuration.}
+After an exploration period of $D_{\mathrm{explore}}$ days, we choose a single configuration for stable deployment, for example
+\[
+\widehat{a} \in \arg\max_a \mathbb{E}[p_a] = \arg\max_a \frac{\alpha_a}{\alpha_a+\beta_a},
+\]
+and then run SCORES with $\theta^{(\widehat{a})}$ as the default.
+Optionally, we continue to run the bandit at a low exploration rate to adapt to long run drift in user behavior.
+
+\paragraph{Remark on nonstationarity.}
+Because user behavior and inventory regimes can drift, a discounted or sliding window update can be used to emphasize recent outcomes.
+One simple approach is to apply exponential forgetting to the pseudo counts before adding the new observation, which yields a recency weighted bandit that tracks gradual change.
+
+\subsection{Half lives}
+Set $\rho_f$ with a short half life that matches behavioral drift, such as days.
+Set $\rho_s$ with a long half life that matches shelf drift, such as weeks or months.
+
+\subsection{Cold item weights}
+Use $c_i(d)$ to define $\lambda_i(d)$, then derive:
+\[
+r_i(d) = r_{\min} + (r_{\max}-r_{\min})\frac{c_i(d)}{c_i(d)+\tau_c},
+\]
+so hot items may move more and cold items stay near shelf.
+
+\section{Conclusion}
+SCORES is formulated as a two time scale trajectory problem.
+Update to update adjacency provides an intent aligned signal and avoids self reinforcing swipe adjacency.
+A Laplacian quadratic surrogate yields spectral diagonalization over items, and temporal difference penalties yield diagonalization over time frequencies.
+The resulting system supports a drifting shelf estimate and bounded fast injections into the shown ordering with explicit stability controls.
+
+\bibliographystyle{plainnat}
+\nocite{*}
+\bibliography{references}
+\end{document}

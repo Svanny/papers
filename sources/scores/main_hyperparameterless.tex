@@ -1,0 +1,435 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage[numbers]{natbib}
+
+\title{SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates \\ and Data Determined Weighting}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study online reordering of a finite set of items to reduce user navigation time while remaining consistent with a drifting physical shelf layout.
+Swipe adjacency is a policy artifact because the current order shapes the swipe path, so we learn proximity only from consecutive update events.
+To obtain a solver with clean spectral structure, we replace absolute distance costs by a Laplacian quadratic surrogate that diagonalizes in the graph Fourier basis.
+We then formulate a two time scale trajectory problem, with a slow shelf component and a fast app component coupled by a proximity term and controlled by temporal smoothness.
+The key modification in this paper is that all weights and time scales are determined from the data: similarities are filtered by an adaptive state space estimator, coupling and smoothness weights are inverse variance weights, and the shelf low pass strength is selected by generalized cross validation.
+A practical solution is a pipeline: spectral embeddings for daily structure, variance weighted temporal smoothing for shelf inference, then a noise floor stopped local swap search that outputs a valid permutation with stability emerging from uncertainty rather than manual caps.
+\end{abstract}
+
+\paragraph{Keywords.}
+Online reordering; spectral seriation; Laplacian quadratic surrogate; time frequency smoothing; drifting shelf inference; adaptive filtering; generalized cross validation.
+
+\tableofcontents
+\bigskip
+
+\section{Setup}
+\subsection{Items and permutations}
+Let $[n]:=\{1,\dots,n\}$ index items.
+An ordering is a permutation $\pi$ of $[n]$.
+Write $\mathrm{pos}_{\pi}(i)\in[n]$ for the position of item $i$ under $\pi$.
+
+\subsection{Sessions, updates, and why swipe adjacency is not the right signal}
+A session is a sequence of visited items $(v_1,\dots,v_m)$ with action indicators $a_t\in\{0,1\}$ where $a_t=1$ denotes an update event.
+The swipe path $(v_t)$ depends strongly on the current UI order, so transition counts between consecutive swipes largely reflect current adjacency rather than user intent.
+
+We therefore base learning on the subsequence of consecutive updates.
+Let $t_1<\cdots<t_k$ be indices with $a_{t_r}=1$.
+Define the update sequence
+\[
+u_r := v_{t_r},\qquad r=1,\dots,k.
+\]
+Optionally, collapse consecutive repeats by removing $u_{r+1}$ whenever $u_{r+1}=u_r$.
+Let $\Delta_r\ge 0$ be the time between update events $r$ and $r+1$.
+
+\subsection{Update adjacency weights with no clip constants}
+We weight consecutive update pairs by a robust, scale free function of inter update time.
+Let $\widehat{F}_d$ be the empirical cumulative distribution function of $\{\Delta_r\}$ pooled across sessions on day $d$.
+Define
+\[
+w_d(\Delta):=1-\widehat{F}_d(\Delta)\in[0,1].
+\]
+This uses only ranks within the day, so it is invariant to absolute time scaling and introduces no clip threshold.
+Other equivalent choices include $w_d(\Delta)=\mathrm{rank}(\Delta)/(\#\Delta)$.
+
+For a day index $d$, define symmetric update adjacency weights
+\[
+\widehat{S}_{ij}(d)
+:=
+\sum_{\text{sessions on day }d}\ \sum_{r=1}^{k-1}
+\mathbf{1}\{u_r=i,\ u_{r+1}=j\}\,w_d(\Delta_r)
+\;+\;
+\mathbf{1}\{u_r=j,\ u_{r+1}=i\}\,w_d(\Delta_r).
+\]
+This captures proximity only between items that are edited consecutively, which is exactly the quantity the UI order can realistically reduce.
+
+\subsection{Adaptive two time scale evidence via state space filtering}
+Fast and slow exponentially weighted averages require forgetting factors.
+We use an adaptive state space estimator that produces a slow latent similarity and a fast residual without choosing half lives by hand.
+
+For each unordered pair $(i,j)$ that appears with nonzero mass, let the observed daily similarity be $\widehat{S}_{ij}(d)$.
+Model a latent slow similarity $S_{ij}(d)$ as a random walk observed in noise:
+\begin{align}
+\widehat{S}_{ij}(d) &= S_{ij}(d) + \varepsilon_{ij}(d), \\
+S_{ij}(d) &= S_{ij}(d-1) + \xi_{ij}(d),
+\end{align}
+where $\varepsilon_{ij}(d)$ is observation noise and $\xi_{ij}(d)$ is process drift.
+
+Define the fast (innovation/residual) similarity
+\[
+S^{\mathrm{fast}}_{ij}(d):=\widehat{S}_{ij}(d)-S_{ij}(d).
+\]
+Residual similarities can be negative. A standard Laplacian $L=D-S$ assumes nonnegative similarities if one wants a positive semidefinite quadratic energy and stable spectral structure; with negative weights, the Laplacian quadratic form can become indefinite and the Fiedler-vector interpretation breaks.
+In practice, when building a ``fast'' Laplacian (and when scoring candidate swaps), use only the positive part
+\[
+S^{\mathrm{fast},+}_{ij}(d):=\max\{S^{\mathrm{fast}}_{ij}(d),0\}.
+\]
+
+Residual similarities can be negative. A standard Laplacian $L=D-S$ assumes nonnegative similarities if one wants a positive semidefinite quadratic energy and stable spectral structure; with negative weights, the Laplacian quadratic form can become indefinite and the Fiedler-vector interpretation breaks.
+In practice, when building a ``fast'' Laplacian (and when scoring candidate swaps), use only the positive part
+\[
+S^{\mathrm{fast},+}_{ij}(d):=\max\{S^{\mathrm{fast}}_{ij}(d),0\}.
+\]
+
+A scalar Kalman filter per edge yields the update
+\begin{align}
+\text{Predict:}\quad &\widetilde{S}_{ij}(d) = S_{ij}(d-1), \\
+\text{Innovation:}\quad &\nu_{ij}(d) = \widehat{S}_{ij}(d)-\widetilde{S}_{ij}(d), \\
+\text{Gain:}\quad &K_{ij}(d) = \frac{P_{ij}(d-1)+Q_{ij}(d)}{P_{ij}(d-1)+Q_{ij}(d)+R_{ij}(d)}, \\
+\text{Update:}\quad &S_{ij}(d) = \widetilde{S}_{ij}(d) + K_{ij}(d)\,\nu_{ij}(d), \\
+\text{Covariance:}\quad &P_{ij}(d) = \bigl(1-K_{ij}(d)\bigr)\bigl(P_{ij}(d-1)+Q_{ij}(d)\bigr).
+\end{align}
+
+The remaining question is how to set the variances $R_{ij}(d)$ and $Q_{ij}(d)$ without hyperparameters.
+We estimate them online from the data using the innovation sequence.
+A simple, fully data determined option is to use rolling empirical second moments computed on the innovation stream itself:
+\begin{align}
+R_{ij}(d) &:= \mathrm{Var}\bigl(\widehat{S}_{ij}(d)-\widehat{S}_{ij}(d-1)\bigr), \\
+Q_{ij}(d) &:= \mathrm{Var}\bigl(S_{ij}(d)-S_{ij}(d-1)\bigr),
+\end{align}
+where $\mathrm{Var}(\cdot)$ denotes an empirical variance computed over a trailing window that is itself selected by predictive likelihood, as described below.
+
+To avoid choosing the window length, we select it by maximizing one step ahead predictive log likelihood on held out days:
+\[
+L^\star \in \arg\max_{L\in\mathcal{L}} \sum_{d\in\mathcal{D}_{\text{val}}} \log p\bigl(\widehat{S}_{ij}(d)\mid \widehat{S}_{ij}(d-1),\dots,\widehat{S}_{ij}(d-L)\bigr),
+\]
+where $\mathcal{L}$ is a small fixed candidate set such as $\{3,5,7,14,21,30\}$ days.
+This is not a tunable parameter in deployment because it is selected by validation and can be reselected periodically.
+
+We define:
+\[
+S^{\text{slow}}(d) := S(d),
+\qquad
+S^{\text{fast}}(d) := \widehat{S}(d) - S(d).
+\]
+The slow component captures persistent structure, the fast component captures day specific deviations.
+
+\subsection{Cold item uncertainty from data}
+Cold item protection emerges from uncertainty.
+
+Let $\widehat{c}_i(d)$ be the number of update events involving item $i$ on day $d$:
+\[
+\widehat{c}_i(d) := \sum_{\text{sessions on day }d}\sum_{r=1}^{k}\mathbf{1}\{u_r=i\}.
+\]
+Define an activity rate model with Poisson observations and a drifting log rate:
+\begin{align}
+\widehat{c}_i(d) &\sim \mathrm{Poisson}\bigl(\lambda_i(d)\bigr), \\
+\log \lambda_i(d) &= \log \lambda_i(d-1) + \zeta_i(d).
+\end{align}
+A one dimensional state space filter yields an estimate of $\lambda_i(d)$ and its posterior variance.
+Items with low activity have high uncertainty, which will translate into higher stability weights downstream.
+
+\section{Quadratic surrogate that diagonalizes on graphs}
+\subsection{Laplacians and scale normalization}
+Given a symmetric similarity matrix $S(d)$, define degree $D(d)=\mathrm{diag}(S(d)\mathbf{1})$ and Laplacian
+\[
+L(d) := D(d) - S(d).
+\]
+For an embedding vector $x\in\mathbb{R}^n$,
+\[
+x^\top L(d) x = \frac12\sum_{i=1}^n\sum_{j=1}^n S_{ij}(d)\,(x_i-x_j)^2.
+\]
+This is the squared distance surrogate. It is quadratic and diagonalizes in the eigenbasis of $L(d)$.
+
+Daily traffic can scale $S(d)$ up or down.
+To eliminate scale sensitivity, we normalize Laplacians by trace:
+\[
+\overline{L}(d) := \frac{L(d)}{\mathrm{tr}(L(d))+\mathbf{1}\{\mathrm{tr}(L(d))=0\}},
+\]
+so that energies are comparable across days.
+For the slow and fast components we use
+\[
+\overline{L}^{\text{slow}}(d)\ \text{from}\ S^{\text{slow}}(d),
+\qquad
+\overline{L}^{\text{fast}}(d)\ \text{from}\ S^{\text{fast}}(d).
+\]
+
+\subsection{From embeddings to permutations}
+Given an embedding $x$, define the induced ordering
+\[
+\pi(x) := \mathrm{argsort}(x),
+\]
+sorting items by $x_i$.
+
+Spectral seriation uses the Fiedler vector, an eigenvector associated with the second smallest eigenvalue of $\overline{L}(d)$:
+\[
+x^{\star}(d)\in\arg\min_{x\perp\mathbf{1},\ \|x\|_2=1} x^\top \overline{L}(d) x.
+\]
+
+\paragraph{Production stability: sign ambiguity and eigengap degeneracy.}
+In production, eigenvector-based orderings can ``thrash'' even when the underlying graph changes little.
+Three common causes are: (i) the arbitrary sign of eigenvectors, (ii) near-degeneracy when $\lambda_2$ is close to $\lambda_3$ (the Fiedler direction is poorly identified), and (iii) changes in graph connectivity on sparse days.
+These manifest as day-to-day full reversals (sign flips), block-level jitter (rotation within a nearly-degenerate eigenspace), and meaningless embeddings when the graph is too disconnected.
+
+\paragraph{Fix:}
+After computing $x^\star(d)$, enforce alignment with the previous day:
+\[
+\langle x^\star(d),x^\star(d-1)\rangle \ge 0.
+\]
+If $\langle x^\star(d),x^\star(d-1)\rangle < 0$, replace $x^\star(d)\leftarrow -x^\star(d)$.
+This removes global day-to-day reversals due purely to sign ambiguity.
+
+\section{Trajectory formulation with slow shelf and fast app components}
+\subsection{State variables}
+For each day $d\in\{0,\dots,D-1\}$:
+\begin{enumerate}
+\item $x_a(d)\in\mathbb{R}^n$ is the fast app embedding.
+\item $x_s(d)\in\mathbb{R}^n$ is the slow shelf embedding.
+\item $\pi_a(d)=\pi(x_a(d))$ is the shown order after rounding and constraints.
+\item $\pi_s(d)=\pi(x_s(d))$ is the inferred shelf order after rounding.
+\end{enumerate}
+
+\subsection{Data terms}
+We use the Laplacian quadratic surrogate for both components:
+\begin{equation}
+J_{\text{graph}} :=
+\sum_{d=0}^{D-1} x_a(d)^\top \overline{L}^{\text{fast}}(d)\,x_a(d)
+\;+\;
+\sum_{d=0}^{D-1} x_s(d)^\top \overline{L}^{\text{slow}}(d)\,x_s(d).
+\label{eq:data_terms_hplfree}
+\end{equation}
+
+\subsection{Variance weighted coupling and shelf smoothness}
+We propose a quadratic trajectory objective:
+\begin{align}
+\min_{\{x_a(d),x_s(d)\}}
+\ &J_{\text{graph}}
+\;+\;
+\sum_{d=0}^{D-1} \|x_a(d)-x_s(d)\|_{\Gamma(d)}^2
+\label{eq:coupling_hplfree}
+\\
+&\;+\;
+\sum_{d=1}^{D-1} \|x_s(d)-x_s(d-1)\|_{K(d)}^2
+\;+\;
+\sum_{d=2}^{D-1} \|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H(d)}^2,
+\label{eq:temporal_smooth_hplfree}
+\end{align}
+with constraints per day:
+\[
+x_a(d)\perp\mathbf{1},\ \|x_a(d)\|_2=1,
+\qquad
+x_s(d)\perp\mathbf{1},\ \|x_s(d)\|_2=1.
+\]
+
+Here $\|z\|_{M}^2 := z^\top M z$ with diagonal positive semidefinite matrices:
+\begin{enumerate}
+\item $\Gamma(d)$ couples app and shelf.
+\item $K(d)$ penalizes shelf velocity.
+\item $H(d)$ penalizes shelf acceleration.
+\end{enumerate}
+
+All three are determined by inverse variance weighting.
+Let $R_i(d)$ be an estimate of $\mathrm{Var}\bigl(x_{a,i}(d)-x_{s,i}(d)\bigr)$.
+Let $Q_{1,i}(d)$ estimate $\mathrm{Var}\bigl(x_{s,i}(d)-x_{s,i}(d-1)\bigr)$.
+Let $Q_{2,i}(d)$ estimate $\mathrm{Var}\bigl(x_{s,i}(d)-2x_{s,i}(d-1)+x_{s,i}(d-2)\bigr)$.
+Then set
+\[
+\Gamma_{ii}(d) := \frac{1}{R_i(d)},
+\qquad
+K_{ii}(d) := \frac{1}{Q_{1,i}(d)},
+\qquad
+H_{ii}(d) := \frac{1}{Q_{2,i}(d)}.
+\]
+Cold item protection is automatic because low activity implies high uncertainty in the inferred shelf coordinates, which increases the effective weights and resists motion.
+
+\section{Frequency domain view of shelf drift and data selected low pass strength}
+This section explains the slow and fast split in time frequency terms.
+For clarity, consider the shelf smoothing subproblem with $x_a(d)$ fixed:
+\begin{equation}
+\min_{\{x_s(d)\}}
+\ \sum_{d=0}^{D-1}\|x_a(d)-x_s(d)\|_{\Gamma}^2
++
+\sum_{d=1}^{D-1}\|x_s(d)-x_s(d-1)\|_{K}^2
++
+\sum_{d=2}^{D-1}\|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H}^2,
+\label{eq:shelf_smooth_only_hplfree}
+\end{equation}
+with constant diagonal weights for exposition.
+
+Let $X_a(\omega)$ and $X_s(\omega)$ be the discrete Fourier transforms over $d$ applied coordinate wise.
+Define
+\[
+g(\omega)=4\sin^2(\pi\omega/D).
+\]
+Then the first difference term contributes a factor $g(\omega)$ and the second difference contributes $g(\omega)^2.
+$
+The objective diagonalizes by $\omega$ and by coordinate:
+\[
+\sum_{\omega=0}^{D-1}
+\left(
+\|X_a(\omega)-X_s(\omega)\|_{\Gamma}^2
++
+g(\omega)\|X_s(\omega)\|_{K}^2
++
+g(\omega)^2\|X_s(\omega)\|_{H}^2
+\right).
+\]
+The minimizer has the explicit low pass form, coordinate wise:
+\[
+X_{s,i}(\omega) =
+\frac{\Gamma_{ii}}{\Gamma_{ii}+K_{ii}\,g(\omega)+H_{ii}\,g(\omega)^2}\ X_{a,i}(\omega).
+\]
+Low frequencies with small $g(\omega)$ pass into the shelf, high frequencies are suppressed.
+The residual $X_a(\omega)-X_s(\omega)$ is a complementary high pass, which is the fast component injected into the UI.
+
+The remaining issue is selecting the effective low pass strength without manual ratios.
+We reparameterize by tying scales to $\Gamma$:
+\[
+K=\alpha\,\Gamma,
+\qquad
+H=\beta\,\Gamma,
+\]
+so the gain depends only on $(\alpha,\beta)$.
+We choose $(\alpha,\beta)$ by generalized cross validation.
+Let $\widehat{x}_s(\alpha,\beta)=A_{\alpha,\beta}x_a$ denote the linear smoothing operator in time.
+Then define
+\[
+\mathrm{GCV}(\alpha,\beta):=
+\frac{\|x_a-\widehat{x}_s(\alpha,\beta)\|_2^2}{\bigl(1-\mathrm{tr}(A_{\alpha,\beta})/D\bigr)^2}.
+\]
+We select
+\[
+(\alpha^\star,\beta^\star)\in\arg\min_{(\alpha,\beta)\in\mathcal{G}} \mathrm{GCV}(\alpha,\beta),
+\]
+over a fixed grid $\mathcal{G}$ on log scale.
+This selection is data determined and can be recomputed periodically.
+
+\section{Practical solver}
+\subsection{Stage 1: build observed similarities from update events}
+On each day $d$:
+\begin{enumerate}
+\item Parse sessions to obtain update sequences $(u_r)$ and inter update times $\Delta_r$.
+\item Compute $w_d(\Delta)=\widehat{F}_d(\Delta)$ from that day distribution.
+\item Accumulate $\widehat{S}(d)$ via consecutive updates.
+\item Update per edge latent slow similarity $S(d)$ with the adaptive state space filter.
+\item Set $S^{\text{slow}}(d)=S(d)$ and $S^{\text{fast}}(d)=\widehat{S}(d)-S(d)$.
+\item Form normalized Laplacians $\overline{L}^{\text{slow}}(d)$ and $\overline{L}^{\text{fast}}(d)$.
+\end{enumerate}
+
+\subsection{Stage 2: spectral embeddings}
+Compute daily fast embedding $x_a^{(0)}(d)$ as the Fiedler vector of $\overline{L}^{\text{fast}}(d)$.
+Compute daily slow embedding $x_s^{(0)}(d)$ as the Fiedler vector of $\overline{L}^{\text{slow}}(d)$.
+
+These are graph frequency solutions, diagonalized by the eigenbasis of each Laplacian.
+
+\subsection{Stage 3: infer a drifting shelf by variance weighted time smoothing}
+Use \eqref{eq:shelf_smooth_only_hplfree} to smooth the slow embedding trajectory over time.
+Two equivalent implementations:
+\begin{enumerate}
+\item Frequency domain: take the DFT over $d$, apply the low pass gain coordinate wise, then invert the DFT.
+\item Time domain: solve the banded normal equations induced by \eqref{eq:shelf_smooth_only_hplfree}, separately for each coordinate.
+\end{enumerate}
+Set $K=\alpha^\star\Gamma$ and $H=\beta^\star\Gamma$ with $(\alpha^\star,\beta^\star)$ chosen by GCV.
+Denote the smoothed result by $x_s(d)$ and set $\pi_s(d)=\pi(x_s(d))$.
+
+\subsection{Stage 4: inject fast improvements onto the shelf using a noise floor stopping rule}
+We produce a valid shown permutation by starting from the shelf order and applying local moves guided by the fast quadratic surrogate.
+Let $\pi\gets\pi_s(d)$.
+
+Define the discrete fast surrogate consistent with the Laplacian energy:
+\[
+\widetilde{J}_{\text{fast}}(\pi;d) := \sum_{i<j} S^{\text{fast}}_{ij}(d)\ \big(\mathrm{pos}_{\pi}(i)-\mathrm{pos}_{\pi}(j)\big)^2.
+\]
+This is the squared distance surrogate, so it matches the diagonalizable form used for embeddings.
+
+\paragraph{Candidate move set without window parameters.}
+Rather than restricting swaps by position radius, we restrict by graph support.
+For each item $i$, let $\mathcal{N}_d(i)$ be the set of neighbors with the largest weights $S^{\text{fast}}_{ij}(d)$.
+We choose the size of $\mathcal{N}_d(i)$ by a data defined sparsification rule, for example keeping all neighbors with $S^{\text{fast}}_{ij}(d)$ above the day median of nonzero weights.
+This introduces no manual $k$.
+
+Candidate swaps are pairs $(i,j)$ with $j\in\mathcal{N}_d(i)$.
+
+\paragraph{Noise floor estimate.}
+Compute a noise scale for swap improvements by sampling a modest number of random candidate swaps from the same candidate set and evaluating their $\Delta \widetilde{J}_{\text{fast}}$ under the current $\pi$.
+Let $\widehat{\sigma}_{\Delta J}(d)$ be the empirical standard deviation of these sampled improvements.
+
+\paragraph{Greedy search with automatic stopping.}
+Iterate:
+\begin{enumerate}
+\item Find the candidate swap with the most negative improvement $\Delta \widetilde{J}_{\text{fast}}$.
+\item Accept it if $\Delta \widetilde{J}_{\text{fast}} \le -\widehat{\sigma}_{\Delta J}(d)$ and feasibility constraints are satisfied.
+\item Stop when no candidate satisfies the noise floor threshold.
+\end{enumerate}
+
+This yields a natural disruption level determined by signal to noise.
+On low signal days the algorithm stops quickly and preserves the shelf order.
+On strong signal days it performs more swaps, but only when improvements are clearly above noise.
+
+\paragraph{Stability emerges from uncertainty rather than caps.}
+Cold items rarely have strong edges in $S^{\text{fast}}(d)$, so they are rarely proposed as beneficial swaps.
+They also have higher uncertainty in shelf inference, which increases coupling and smoothness weights and makes their inferred shelf positions more stable.
+No manual displacement caps are required.
+
+Return $\pi_a(d)=\pi$.
+
+\subsection{Complexity}
+For sparse similarities the Laplacian is sparse.
+Computing a Fiedler vector can be done with iterative methods whose dominant cost is sparse matrix vector products.
+The time smoothing step solves banded systems or applies FFTs over $d$.
+The swap phase evaluates a sparse set of candidate swaps defined by fast graph neighbors, and can be implemented with incremental score updates that touch only edges incident to swapped items.
+
+\paragraph{Big-$O$ summary.}
+Let $n$ be the number of items, $D$ the number of days, and let $m_d:=\#\{(i,j): S_{ij}(d)\neq 0\}$ be the number of nonzero similarities (edges) on day $d$ with $m:=\max_d m_d$.
+\begin{enumerate}
+\item \emph{Daily spectral embedding.} Using Lanczos/power iterations, $T$ iterations of sparse matrix--vector multiplies cost
+\[
+O\bigl(T\,m_d\bigr)\ \text{per day, hence}\ O\bigl(T\sum_{d=0}^{D-1} m_d\bigr)=O\bigl(T D m\bigr).
+\]
+\item \emph{Temporal smoothing (per coordinate).} If the shelf smoothing is implemented as a banded linear solve with constant bandwidth, it costs $O(D)$ per coordinate, hence $O(nD)$ total. If implemented via FFT-based convolution in time, it costs $O(D\log D)$ per coordinate, hence $O(nD\log D)$ total.
+\item \emph{Local swap search.} If each item proposes $k$ candidate neighbors (e.g., from the fast graph), the candidate set size is $O(nk)$; with incremental updates that touch only incident edges, each evaluation/update is $O(k)$, so $I$ accepted iterations cost $O(I\,k)$ plus an initial pass $O(nk)$.
+\end{enumerate}
+
+\paragraph{End-to-end complexity (SCORES).}
+Under the assumptions above and ignoring lower-order terms, the overall cost across $D$ days is
+\[
+O\bigl(T D m\bigr)\;+\;
+\begin{cases}
+O(nD), & \text{banded time-smoothing},\\
+O(nD\log D), & \text{FFT-based time-smoothing},
+\end{cases}
+\;+\; O(nk + I k).
+\]
+
+\section{Discussion: what is now data determined}
+SCORES has three places where hyperparameters typically enter: time scale, stability weights, and swap disruption controls.
+In this formulation:
+\begin{enumerate}
+\item Time scale is determined by an adaptive state space estimator, with effective memory governed by estimated process and observation variance.
+\item Stability weights $\Gamma,K,H$ are inverse variance weights derived from uncertainty in coupling residuals and shelf differences.
+\item Swap disruption is controlled by a noise floor stopping rule, so the number of swaps is an output, not an input.
+\end{enumerate}
+
+\section{Conclusion}
+SCORES is formulated as a two time scale trajectory problem.
+Update to update adjacency provides an intent aligned signal and avoids self reinforcing swipe adjacency.
+A Laplacian squared distance surrogate yields spectral diagonalization over items, and temporal difference penalties yield diagonalization over time frequencies.
+In this paper, the time scales, weights, and disruption controls are selected from the data through adaptive filtering, inverse variance weighting, and generalized cross validation.
+The resulting system supports a drifting shelf estimate and bounded fast injections into the shown ordering with stability emerging from uncertainty rather than manual tuning.
+
+\bibliographystyle{plainnat}
+\end{document}

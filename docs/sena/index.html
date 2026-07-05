@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SENA: Sparse-stock Estimation with Nonstationary Adaptation by Monysovann Ly.">
+    <title>SENA: Sparse-stock Estimation with Nonstationary Adaptation</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../">Monysovann Ly Papers</a>
+      <nav class="nav" aria-label="Papers">
+        <a href="../five-laws/">Five Laws</a>
+        <a href="../sena/">SENA</a>
+        <a href="../scores/">SCORES</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="paper-hero">
+        <div class="paper-hero-inner">
+          <p class="eyebrow">Bayesian inventory modeling</p>
+          <h1>SENA: Sparse-stock Estimation with Nonstationary Adaptation</h1>
+          <p class="lede">A Bayesian generative model for sparse inventory observations, drift, and reorder decisions.</p>
+          <div class="actions">
+            <a class="button" href="sena.pdf">Open PDF</a>
+            <a class="button secondary" href="sena.pdf" download>Download PDF</a>
+            <a class="button secondary" href="sena.tex">View TeX</a>
+            <a class="button secondary" href="refs.bib">View BibTeX</a>
+          </div>
+          <div class="meta-grid" aria-label="Paper metadata">
+            <div class="meta-item"><span class="meta-label">Author</span><span class="meta-value">Monysovann Ly</span></div>
+            <div class="meta-item"><span class="meta-label">Date</span><span class="meta-value">2026</span></div>
+            <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PDF + TeX + BibTeX</span></div>
+            <div class="meta-item"><span class="meta-label">License</span><span class="meta-value">CC BY 4.0</span></div>
+          </div>
+          <img class="cover-preview" src="sena-cover.png" alt="First page preview for SENA">
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="content two-column">
+          <article class="prose">
+            <h2>Abstract</h2>
+            <p>SENA (Sparse-stock Estimation with Nonstationary Adaptation) is a proposed Bayesian generative model for settings with a single business entity where services and optionally retail SKUs are sold but inventory is recorded intermittently. From sparse stock snapshots, SENA is designed to infer a plausible latent ledger of service demand, retail demand, order placements, receipts, and adjustments, while adapting to drift, seasonality, promotions, and occasional change points.</p>
+            <p>The model is designed to work with minimal inputs, but can optionally incorporate user-supplied time series and low-effort signals to improve identifiability. Its intended outputs are posterior inventory trajectories with uncertainty, demand-rate estimates and forecasts, stockout risk, and reorder policies under explicit service-level targets.</p>
+          </article>
+          <aside class="side">
+            <h2>Keywords</h2>
+            <p>Bayesian inference, inventory reconstruction, stockout risk, demand drift, restocking policy, safety stock, reorder point.</p>
+            <div class="source-list">
+              <a href="sena.tex">Primary TeX source</a>
+              <a href="refs.bib">BibTeX references</a>
+              <a href="sena.pdf">PDF</a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="reader-heading">
+        <div class="reader">
+          <p class="eyebrow">Reader</p>
+          <h2 id="reader-heading">PDF preview</h2>
+          <p class="mobile-reader-note">PDF preview is disabled on narrow screens for performance. Use Open PDF above for the cleanest phone reading view.</p>
+          <object class="pdf-frame" data="sena.pdf" type="application/pdf">
+            <p><a href="sena.pdf">Open the PDF</a>.</p>
+          </object>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Paper content licensed under CC BY 4.0.</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,119 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+
+\begin{document}
+
+\section*{Review: \textit{SENA: Sparse-stock Estimation with Nonstationary Adaptation}}
+
+\subsection*{Overall assessment}
+This draft is technically stronger than a typical concept paper and now has clearer treatment of irregular intervals, lead-time latent states, and realized-vs-demand-side quantities. The most important remaining issues are implementation-facing consistency problems in state-change reporting and index/boundary conventions, plus a few high-impact ambiguities that can yield materially different implementations.
+
+\subsection*{Most important technical findings}
+\begin{enumerate}[leftmargin=*]
+
+\item \textbf{Definite error: reported inventory-change decomposition is inconsistent with the clamped state transition.}
+
+\textbf{Location:} Inventory transition equations in Sections 1/2 ($x_{k,i}=\max\{0, x_{k-1,i}+R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i}\}$) versus output decomposition in Section 6 ($\Delta x_{k,i}=R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i}$).
+
+\textbf{Problem:} The decomposition omits the nonnegativity clamp term. If $x_{k-1,i}+R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i}<0$, the state update clamps to zero, so the stated equality for $\Delta x_{k,i}$ does not hold.
+
+\textbf{Why it matters:} Driver attribution and diagnostics can be wrong exactly in stressed intervals (large negative adjustments / near-stockout states), which are operationally the most important intervals.
+
+\textbf{Suggested fix:} Either (i) define decomposition on a pre-clamp latent state $x^\star_{k,i}=x_{k-1,i}+R_{k,i}-C_{k,i}+A^{\mathrm{adj}}_{k,i}$, or (ii) include an explicit clamp-correction term in $\Delta x_{k,i}$.
+
+\item \textbf{Likely issue: interval indexing and initial conditions are under-specified.}
+
+\textbf{Location:} Definitions use report times $t_1<\cdots<t_K$ and $\Delta t_k=t_k-t_{k-1}$, while transitions use $x_{k-1,i}$, $B_{k-1,i}$, and indicators on $[t_{k-1},t_k]$.
+
+\textbf{Problem:} The manuscript does not define $t_0$, $x_{0,i}$, or $B_{0,i}$ (or an explicit interval index set such as $k=2,\ldots,K$ for updates).
+
+\textbf{Why it matters:} This creates ambiguity in the first interval and can change likelihood terms, receipt assignment, and initial posterior mass.
+
+\textbf{Suggested fix:} Add an explicit indexing convention (for example, updates for $k=2,\dots,K$ with initial states at $k=1$) or define $t_0$ and priors/initialization for $x_{0,i},B_{0,i}$.
+
+\item \textbf{Likely issue: order-policy coefficients are described as time-varying but are not given time dynamics.}
+
+\textbf{Location:} State list and placement model ($\alpha_{k,i},\beta_{k,i}$ appear time-indexed), plus hyperparameter priors.
+
+\textbf{Problem:} $\alpha_{k,i}$ and $\beta_{k,i}$ are indexed by $k$ but no transition model is provided; priors are given directly, which implies either independent per-interval coefficients or an incomplete specification.
+
+\textbf{Why it matters:} This changes parameter count and identifiability substantially and can make implementations diverge in both complexity and behavior.
+
+\textbf{Suggested fix:} Choose one explicit design: static coefficients ($\alpha_i,\beta_i$) or dynamic coefficients with stated transitions (e.g., random walk with shrinkage).
+
+\item \textbf{Likely implementation ambiguity: LogNormal parameterization is inconsistent across equations.}
+
+\textbf{Location:} Order-size model uses $\mathrm{LogNormal}(\mu^O_{k,i},\sigma^O_i)$, while lead-time model uses $\mathrm{LogNormal}(\mu_{L,u,i},\sigma^2_{L,u,i})$.
+
+\textbf{Problem:} One place appears to use a log-standard-deviation parameter and the other a log-variance parameter.
+
+\textbf{Why it matters:} Different software APIs interpret LogNormal arguments differently; this ambiguity can produce materially different variances and reorder-risk outputs.
+
+\textbf{Suggested fix:} State one global convention explicitly (e.g., ``LogNormal(log-mean, log-standard-deviation)'') and rewrite both formulas to match that convention.
+
+\item \textbf{Unsupported claim: causal language about promo modeling is stronger than evidence shown.}
+
+\textbf{Location:} Promotions motivation text (``prevents'' misattribution and ``improves identifiability'').
+
+\textbf{Problem:} The manuscript proposes an evaluation protocol but does not yet present empirical evidence demonstrating prevention-level causal claims.
+
+\textbf{Why it matters:} Overstated language weakens scientific calibration and may be challenged in review.
+
+\textbf{Suggested fix:} Rephrase to ``can reduce misattribution risk'' and ``can improve identifiability,'' then tie the claim to the evaluation section as a falsifiable hypothesis.
+
+\end{enumerate}
+
+\subsection*{Notation / convention drift check (required)}
+I explicitly checked recurring high-risk symbols for descriptor drift (first definition versus later usage), including $x_{k,i}$, $D_{k,i}$, $C_{k,i}$, $B_{k,i}$, $S_{k,j}$, $Q_{k,i}$, $m^L_{k,i}$, and $v^L_{k,i}$.
+
+\begin{itemize}[leftmargin=*]
+\item No initial/final, source/observer, or role-adjective conflicts were found for these symbols.
+\item Sign conventions for consumption and pipeline terms are internally consistent after the realized-demand clarification.
+\item Branch/quadrant checks were performed: no inverse-trig expressions were found, so no concrete atan/atan2 branch issue is present.
+\item Dimensional checks on key planning quantities ($d_{k,i}$, $D^{\mathrm{LT}}_{k,i}$, DoC, SS, ROP) did not reveal a concrete unit mismatch.
+\end{itemize}
+
+\subsection*{Meaningful editorial findings}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Location:} Scope wording in Abstract/Section 1 (``single-business'' versus ``single-user'').
+
+\textbf{Problem:} The manuscript alternates between two scope labels that can be interpreted differently.
+
+\textbf{Why it matters:} Scope ambiguity affects reproducibility and external validity claims.
+
+\textbf{Suggested fix:} Pick one term and define it once (e.g., ``single business entity with one internally coherent inventory process'').
+
+\textbf{Candidate rewrite:} ``SENA is designed for a single business entity with intermittently observed inventory and no cross-business pooling.''
+
+\item \textbf{Location:} Equation-dense sections (inventory transition, lead-time mapping, ROP/SS definitions).
+
+\textbf{Problem:} Many key equations are referenced verbally without equation labels.
+
+\textbf{Why it matters:} This slows technical review and increases risk of implementation mistakes when citing formulas.
+
+\textbf{Suggested fix:} Add equation labels for core transitions and refer to them consistently in prose.
+\end{enumerate}
+
+\subsection*{Proofing-sweep (required micro-scan)}
+I ran the bundled proofing scan logic on source and compiled outputs.
+
+\begin{itemize}[leftmargin=*]
+\item \texttt{main.tex}: no high-confidence scan hits.
+\item \texttt{refs.bib}: no high-confidence scan hits.
+\item \texttt{main.pdf}: repeated ``double period'' hits arise from table-of-contents dot leaders; spot-check indicates these are formatting artifacts, not punctuation defects in manuscript prose.
+\end{itemize}
+
+\subsection*{Highest-priority fixes before submission}
+\begin{enumerate}[leftmargin=*]
+\item Repair Section 6 inventory-change decomposition so it is mathematically consistent with the nonnegativity clamp.
+\item Make interval indexing and initial-state conventions explicit ($t_0/x_0/B_0$ or equivalent $k$ range).
+\item Resolve time-indexing intent for order-policy coefficients ($\alpha,\beta$ static vs dynamic with transition equations).
+\item Standardize LogNormal parameterization notation across order-size and lead-time equations.
+\end{enumerate}
+
+\subsection*{Items needing external verification}
+No high-priority findings above require outside literature lookup; they are internal consistency and implementation-specification issues within the manuscript.
+
+\end{document}

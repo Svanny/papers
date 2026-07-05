@@ -1,0 +1,177 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{amsmath}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\begin{document}
+
+\section*{Review of \texttt{main.tex}: SENA manuscript}
+
+\textbf{Overall assessment.}
+The manuscript is strong in scope and technical ambition, with a coherent probabilistic structure and many implementation-oriented details.
+The highest-risk issues are not arithmetic mistakes, but specification ambiguities that can produce materially different implementations (especially interval indexing, state initialization, and symbol overload).
+I did not find clear algebraic sign/factor errors in the core inventory, lead-time mapping, or safety-stock equations.
+
+\section*{Most important technical findings}
+
+\begin{enumerate}
+  \item \textbf{Definite error: off-by-one/index-domain inconsistency in the age-state recursion.}
+
+  \textbf{Location:} Section ``Restocking as a policy with an explicit order pipeline,'' age update equation for $\text{age}_{k+1,i}$; compare with earlier definition that transition-event quantities (including $G_{k,i}$) are defined for $k=2,\dots,K$ only.
+
+  \textbf{Problem:} The manuscript defines transition events on $k=2,\dots,K$, but writes
+  \[
+    \text{age}_{k+1,i}=\begin{cases}
+      0,& G_{k,i}=1,\\
+      \text{age}_{k,i}+\Delta t_k,& G_{k,i}=0.
+    \end{cases}
+  \]
+  Without an explicit $k$ range, this is inconsistent either at $k=1$ (requires undefined $G_{1,i}$) or at $k=K$ (creates unused $\text{age}_{K+1,i}$ while leaving $\text{age}_{2,i}$ underspecified).
+
+  \textbf{Why it matters:} This directly affects placement propensity $\pi^{\mathrm{ord}}_{k,i}$ and therefore order timing and inferred stockout risk.
+
+  \textbf{Suggested fix:} Re-index explicitly, for example
+  \[
+    \text{age}_{k,i}=\begin{cases}
+      0,& G_{k-1,i}=1,\\
+      \text{age}_{k-1,i}+\Delta t_{k-1},& G_{k-1,i}=0,
+    \end{cases}\quad k=2,\dots,K,
+  \]
+  with $\text{age}_{1,i}=a_i^{\mathrm{init}}$.
+
+  \item \textbf{Likely issue: missing initial-state priors for multiple random-walk latent processes.}
+
+  \textbf{Location:} Drift and lead-time state equations for $\log\lambda_{k,j}$, $\log\mu_{k,i}$, $\mu^{\mathrm{use}}_{k,j,i}$, $\ell_{k,i}$, and $\psi_{k,i}$.
+
+  \textbf{Problem:} Recursions are specified, but explicit priors/initial conditions at $k=1$ are not specified for these states (in contrast to $x_{1,i}$, $B_{1,i}$, and $\text{age}_{1,i}$, which are initialized explicitly).
+
+  \textbf{Why it matters:} Different implicit defaults (fixed constants, diffuse priors, empirical Bayes starts) can materially change posterior behavior and reproducibility.
+
+  \textbf{Suggested fix:} Add a compact ``initial latent-state priors'' block, e.g.
+  $\log\lambda_{1,j}\sim\text{Normal}(m_{\lambda,j},s_{\lambda,j}^2)$,
+  $\log\mu_{1,i}\sim\text{Normal}(m_{\mu,i},s_{\mu,i}^2)$,
+  $\ell_{1,i}\sim\text{Normal}(m_{L,i},s_{L,i}^2)$,
+  $\psi_{1,i}\sim\text{Normal}(m_{v,i},s_{v,i}^2)$,
+  and (if used) $\mu^{\mathrm{use}}_{1,j,i}\sim\text{Normal}(m_{\mathrm{use},j,i},s_{\mathrm{use},j,i}^2)$.
+
+  \item \textbf{Likely issue: lag-index boundary ambiguity in delayed lead-time observations.}
+
+  \textbf{Location:} Optional lead-time observations with
+  $\ell_{k-\delta^m_{k,i},i}$ and $\psi_{k-\delta^c_{k,i},i}$, where $\delta\in\{0,\dots,D\}$.
+
+  \textbf{Problem:} The text does not constrain $\delta$ relative to $k$, so early intervals can reference index $\le 0$.
+
+  \textbf{Why it matters:} This creates implementation divergence (padding conventions vs truncation) and can silently bias early-interval likelihood terms.
+
+  \textbf{Suggested fix:} State one explicit boundary rule, e.g. enforce $\delta\le k-1$, or map to
+  $\ell_{\max(1,k-\delta),i}$ and $\psi_{\max(1,k-\delta),i}$.
+
+  \item \textbf{Notation/terminology drift check (required): conflict in demand vs realized-consumption naming.}
+
+  \textbf{Location:} Inventory dynamics and output sections.
+
+  \textbf{Problem:} Symbols with the $C$ prefix are used for conceptually different roles:
+  $C_{k,i}$ is realized/capped consumption, while $C^{\mathrm{svc}}_{k,i}$ and $C^{\mathrm{ret}}_{k,i}$ are used inside
+  $D_{k,i}=C^{\mathrm{svc}}_{k,i}+C^{\mathrm{ret}}_{k,i}$ and later described as latent demand-side components.
+
+  \textbf{Why it matters:} This can cause implementation bugs in censoring, KPI computation, and interpretation of ``consumption'' outputs.
+
+  \textbf{Suggested fix:} Reserve $C$ for realized quantities only; rename latent demand-side components to
+  $D^{\mathrm{svc}}_{k,i}$ and $D^{\mathrm{ret}}_{k,i}$, and keep
+  $C_{k,i}=\min\{D_{k,i},x_{k-1,i}+R_{k,i}\}$ as the realized counterpart.
+
+  \item \textbf{Likely issue: symbol overload for $B$ creates implementation-facing ambiguity.}
+
+  \textbf{Location:} Global indices/definitions and recipe subsection.
+
+  \textbf{Problem:} $B$ denotes number of bundle types, $B_{k,i}$ denotes in-transit inventory state, and $B^{(m)}_{k,j,i}$ denotes per-instance Bernoulli usage indicator.
+
+  \textbf{Why it matters:} Overloaded symbols increase risk of coding errors and documentation drift, especially in appendices or software implementations.
+
+  \textbf{Suggested fix:} Rename at least one family, e.g. bundle count $N_{\mathrm{bundle}}$, indicator $Z^{(m)}_{k,j,i}$, while keeping $B_{k,i}$ for pipeline stock.
+
+  \item \textbf{Unsupported-claim calibration issue in promo/bundle narrative.}
+
+  \textbf{Location:} Promotions and bundles motivation/conclusion statements (e.g., claims that explicit promo modeling ``can improve identifiability'' and ``improving both inference stability and business interpretability").
+
+  \textbf{Problem:} These are plausible claims, but currently stronger than the evidence shown in this manuscript draft (no quantitative ablation results are presented in the same section).
+
+  \textbf{Why it matters:} Overstated claims weaken technical credibility at review time.
+
+  \textbf{Suggested fix:} Keep causal language conditional (``can''/``hypothesized to'') and explicitly point to the Evaluation protocol for publication readiness section metrics as the validation mechanism.
+\end{enumerate}
+
+\section*{Symbol drift snapshot (requested check)}
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.14\textwidth}|>{\raggedright\arraybackslash}p{0.26\textwidth}|>{\raggedright\arraybackslash}p{0.28\textwidth}|>{\raggedright\arraybackslash}p{0.24\textwidth}|}
+\hline
+\textbf{Symbol} & \textbf{First definition / descriptor} & \textbf{Later descriptor variant} & \textbf{Assessment} \\
+\hline
+$C_{k,i}$ & Realized consumption/usage capped by available stock. & Coexists with $C^{\mathrm{svc}}_{k,i},C^{\mathrm{ret}}_{k,i}$ that are later used to build latent demand $D_{k,i}$. & Conflict risk (realized vs latent semantics under same prefix). \\
+\hline
+$B$ / $B_{k,i}$ / $B^{(m)}_{k,j,i}$ & Bundle-count cardinality, in-transit pipeline stock, and Bernoulli usage indicator. & All three appear as central symbols in separate model layers. & Overload likely to confuse implementation and exposition. \\
+\hline
+$D_{k,i}$ & Latent unconstrained demand/usage for interval $k$. & Later decomposition uses $C^{\mathrm{svc}}+C^{\mathrm{ret}}$ naming. & Descriptor drift via mixed latent/realized naming family. \\
+\hline
+\end{longtable}
+
+\section*{Meaningful editorial findings}
+
+\begin{enumerate}
+  \item \textbf{Location:} Equation-recursion blocks across Sections 2, 4, and 6.
+
+  \textbf{Problem:} Several recursions omit explicit index ranges right after equations, which is the root cause of multiple ambiguities above.
+
+  \textbf{Why it matters:} Readers can mis-implement edge intervals even when core equations are correct.
+
+  \textbf{Suggested fix:} Add one short sentence after each recurrence: ``valid for $k=2,\dots,K$'' (or corresponding range).
+
+  \textbf{Candidate rewrite:} ``For all recursions below, $k=2,\dots,K$ unless otherwise stated.''
+
+  \item \textbf{Location:} Promotions/bundles section concluding sentence.
+
+  \textbf{Problem:} The sentence states improvement outcomes without immediate quantitative support.
+
+  \textbf{Why it matters:} Tone overreach is likely to draw reviewer pushback.
+
+  \textbf{Suggested fix:} Downtone to hypothesis language and reference planned ablations in the Evaluation protocol for publication readiness section.
+
+  \textbf{Candidate rewrite:} ``In this formulation, explicit bundles are expected to improve identifiability and interpretability; the Evaluation protocol for publication readiness section specifies ablations to test this claim.''
+\end{enumerate}
+
+\section*{Proofing sweep (mandatory micro-scan)}
+
+I ran the required scanner and spot-checked results:
+
+\begin{itemize}
+  \item \textbf{Location:} command-level scan of \texttt{main.pdf} via \texttt{python scripts/proofing\_scan.py main.pdf --max-hits 80}.
+
+  \textbf{Problem:} Hits were almost entirely \texttt{PUNC\_DOUBLE\_PERIOD} from table-of-contents dot leaders (``. . .''), i.e., false positives for this rule.
+
+  \textbf{Suggested fix:} No manuscript text fix needed; if desired, refine scanner to ignore TOC pages.
+
+  \item \textbf{Location:} scan of source text and bibliography via \texttt{python scripts/proofing\_scan.py main.tex --max-hits 80} and \texttt{python scripts/proofing\_scan.py refs.bib --max-hits 80}.
+
+  \textbf{Problem:} No high-confidence pattern-scan hits in manuscript source or bibliography entries.
+
+  \textbf{Suggested fix:} None required for the scanned rule set.
+\end{itemize}
+
+\section*{Highest-priority fixes (in order)}
+
+\begin{enumerate}
+  \item Fix age-state indexing/domain ambiguity (definite correctness issue).
+  \item Add explicit initial priors for all random-walk latent states.
+  \item Resolve $C$-family and $B$-family notation overload before implementation appendices/code release.
+  \item Calibrate promo/bundle benefit claims to match currently presented evidence.
+\end{enumerate}
+
+\section*{Items needing external verification}
+
+No external factual claims were identified that require outside source verification for this review.
+The flagged issues are internal consistency, identifiability, indexing, and claim-strength calibration issues within the manuscript itself.
+
+\end{document}

@@ -1,0 +1,129 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\begin{document}
+
+\section*{Review: SENA manuscript}
+
+\textbf{Overall assessment.}
+The manuscript is ambitious, mostly coherent, and technically detailed enough to be useful for implementation.
+The strongest value is the explicit inventory transition, pipeline treatment, and practical optional-observation channels.
+The main risks are indexing/time-convention ambiguity and a few implementation-facing definitions that are currently under-specified.
+
+\textbf{Coverage checks performed.}
+I explicitly checked branch conventions, sign conventions, symbol definitions, dimensional consistency, and implementation ambiguity across main equations and appendices/implementation-facing formulas.
+No inverse-trig branch issue (e.g., \texttt{arctan(x/y)}) was found.
+
+\section*{Most important technical findings}
+
+\begin{enumerate}
+  \item \textbf{Definite inconsistency: interval indexing drifts across core equations.}
+
+  \textbf{Location:} Definitions/notation for transition intervals ($k\in\{2,\dots,K\}$), order placement/age dynamics, and receipt assignment in Eq. \texttt{eq:receipt-assignment}.
+
+  \textbf{Problem:} The manuscript first defines transition intervals only for $k=2,\dots,K$, but later formulas use $G_{k,i}, O_{k,i}, R_{k,i}$ as if interval-indexed quantities also exist for $k=1$ (e.g., $\sum_{u=1}^{k} O_{u,i}\mathbf{1}\{\cdots\}$).
+
+  \textbf{Why it matters:} This creates an off-by-one ambiguity in implementation and can misalign state transitions, order events, and receipts.
+
+  \textbf{Suggested fix:} Adopt one explicit convention and use it everywhere. For example, index intervals as $h=1,\dots,K-1$ on $[t_h,t_{h+1}]$, or keep $k=2,\dots,K$ and explicitly set $G_{1,i}=O_{1,i}=R_{1,i}=0$ with receipt sums starting at $u=2$.
+
+  \item \textbf{Likely issue: order placement time is ambiguous relative to receipt timing.}
+
+  \textbf{Location:} Order placement definition (``placed in interval $k$") and arrival-time construction $a_{u,i}=t_u+L^{\mathrm{ord}}_{u,i}$.
+
+  \textbf{Problem:} ``Placed in interval'' implies an event somewhere in $[t_{u-1},t_u]$, but arrival time uses $t_u$ as if placement occurs exactly at the report boundary.
+
+  \textbf{Why it matters:} This can bias receipt timing (often by up to nearly one reporting interval) and affects inferred stockouts and reorder diagnostics.
+
+  \textbf{Suggested fix:} Introduce an explicit within-interval placement timestamp (latent or deterministic, e.g., midpoint/start/end) and define $a_{u,i}=s_{u,i}+L^{\mathrm{ord}}_{u,i}$.
+
+  \item \textbf{Likely issue: full-sample price centering leaks future information in online mode.}
+
+  \textbf{Location:} Price centering definition
+  $\tilde p^{\mathrm{svc}}_{k,j}=\log p^{\mathrm{svc}}_{k,j}-\frac{1}{K}\sum_{r=1}^K\log p^{\mathrm{svc}}_{r,j}$
+  (and analogous retail form), versus the online-filtering workflow section.
+
+  \textbf{Problem:} Centering by the full horizon uses future observations when inference is done sequentially.
+
+  \textbf{Why it matters:} This introduces look-ahead leakage and makes real-time implementation inconsistent with the stated workflow.
+
+  \textbf{Suggested fix:} Use a training-period baseline, rolling baseline, or running mean up to $k$; alternatively state clearly that this centering is retrospective-only.
+
+  \item \textbf{Likely issue: initial-state prior is data-dependent and may double-use the first report.}
+
+  \textbf{Location:} $x^{\mathrm{init}}_i\sim\mathrm{Normal}^+(y_{1,i},\sigma^2_{\mathrm{obs},i})$ and the general observation model $y_{k,i}\sim\mathrm{Normal}(x_{k,i},\sigma^2_{\mathrm{obs},i})$.
+
+  \textbf{Problem:} If $k=1$ is included in the observation likelihood, $y_{1,i}$ informs $x_{1,i}$ twice (through prior center and likelihood).
+
+  \textbf{Why it matters:} This can make posterior uncertainty too tight at initialization and propagate overconfidence downstream.
+
+  \textbf{Suggested fix:} Either (i) use a data-independent prior for $x_{1,i}$, or (ii) keep this empirical-Bayes initialization but explicitly exclude $k=1$ from the observation likelihood.
+
+  \item \textbf{Definite implementation gap: undefined constant in lead-time range normalization.}
+
+  \textbf{Location:} Relative-width formula
+  $w_{k,i}=\frac{\tilde L^{\mathrm{hi}}_{k,i}-\tilde L^{\mathrm{lo}}_{k,i}}{\max\{(\tilde L^{\mathrm{hi}}_{k,i}+\tilde L^{\mathrm{lo}}_{k,i})/2,\epsilon\}}$.
+
+  \textbf{Problem:} $\epsilon$ is not defined.
+
+  \textbf{Why it matters:} Reproducibility and dimensional consistency are unclear (especially when lead-time units are days).
+
+  \textbf{Suggested fix:} Define $\epsilon$ explicitly with units (e.g., $\epsilon=0.5$ day), or replace with a fixed positive floor in the same unit system.
+
+  \item \textbf{Likely notation drift: $v^L_{k,i}$ is described as ``variability'' but used as variance.}
+
+  \textbf{Location:} State list (``latent lead-time variability state''), log-state definition $\psi_{k,i}=\log v^L_{k,i}$, and LogNormal mapping in Eq. \texttt{eq:leadtime-map}.
+
+  \textbf{Problem:} The mapping formula is the mean/\emph{variance} conversion for a LogNormal; if readers interpret $v^L$ as standard deviation, implementation will be wrong.
+
+  \textbf{Why it matters:} This is a high-impact parameterization ambiguity in the receipt generator.
+
+  \textbf{Suggested fix:} Rename to ``lead-time variance state'' and state units (days$^2$), or reparameterize explicitly in terms of standard deviation.
+\end{enumerate}
+
+\section*{Notation/terminology drift check (required)}
+
+\begin{itemize}
+  \item \textbf{Interval index $k$:} first defined for transition intervals as $k=2,\dots,K$; later reused in event/receipt formulas in ways that imply availability at $k=1$. This is a real conflict and should be unified.
+  \item \textbf{Lead-time variability symbol $v^L_{k,i}$:} first described generically as ``variability,'' later used as variance in the LogNormal conversion. This should be disambiguated in wording and units.
+  \item \textbf{Other key symbols ($x_{k,i}, B_{k,i}, D_{k,i}, C_{k,i}$):} definitions are otherwise mostly stable across sections.
+\end{itemize}
+
+\section*{Meaningful editorial findings}
+
+\begin{enumerate}
+  \item \textbf{Location:} \texttt{refs.bib}, entry \texttt{Axsater2015}.
+
+  \textbf{Problem:} Author encoding appears malformed: the source uses \verb|Axs{"a}ter|-style text without the required backslash before the umlaut command (current form: \verb|Axs{"a}ter| should be \verb|Axs{\"a}ter|).
+
+  \textbf{Why it matters:} Incorrect diacritic markup degrades bibliography quality and can break downstream bibliography tooling.
+
+  \textbf{Suggested fix:} Change author to \texttt{Axs{\"a}ter, Sven}.
+\end{enumerate}
+
+\section*{Proofing-sweep notes}
+
+I ran the bundled proofing scan script on manuscript source files (\texttt{main.tex}, \texttt{refs.bib}) and found no high-confidence punctuation/capitalization pattern hits.
+A scan on \texttt{main.pdf} produced many false positives from table-of-contents dot leaders; no additional actionable copy defects were confirmed beyond the bibliography markup issue above.
+
+\section*{Highest-priority fixes before publication}
+
+\begin{enumerate}
+  \item Unify interval indexing and event-time conventions for orders/receipts.
+  \item Remove or constrain look-ahead in price centering for online inference.
+  \item Resolve initialization double-use risk for $y_{1,i}$.
+  \item Define $\epsilon$ and disambiguate $v^L$ as variance vs standard deviation.
+  \item Correct bibliography diacritic markup.
+\end{enumerate}
+
+\section*{Items needing external verification}
+
+\begin{itemize}
+  \item \textbf{Operational data availability assumption:} whether future price values are known at decision time in the intended deployment setting (determines whether current centering is valid).
+  \item \textbf{Approximation choice:} adequacy of interval-collapsed censoring and lead-time-demand approximations should be validated empirically via the proposed simulation and backtest protocol.
+\end{itemize}
+
+\end{document}
