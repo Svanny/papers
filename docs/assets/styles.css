@@ -318,18 +318,252 @@ h1 {
   margin: 0 auto;
 }
 
-.pdf-frame {
+.reader-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(220px, 0.32fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: end;
+}
+
+.reader-preview img {
+  display: block;
   width: 100%;
-  height: min(82svh, 920px);
-  min-height: 620px;
+  max-width: 360px;
   border: 1px solid var(--line);
   background: var(--paper);
   box-shadow: var(--shadow);
 }
 
-.mobile-reader-note {
-  display: none;
+.article-body {
+  background: var(--bg);
+}
+
+.article-page {
+  padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 4vw, 4rem) clamp(3rem, 7vw, 6rem);
+}
+
+.article-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 0 0 clamp(1.4rem, 4vw, 2.8rem);
+}
+
+.article-toolbar .eyebrow {
+  margin: 0;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 0.5rem;
   color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-link::before {
+  content: "< ";
+}
+
+.tex-article {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  padding: clamp(1.2rem, 4vw, 3rem);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  font-size: clamp(1rem, 1.8vw, 1.08rem);
+  overflow-wrap: break-word;
+}
+
+.tex-article .maketitle,
+.tex-article h1.titleHead {
+  text-align: center;
+}
+
+.tex-article h1.titleHead {
+  max-width: none;
+  margin: 0 0 0.9rem;
+  font-size: clamp(2rem, 6vw, 3.8rem);
+  line-height: 0.98;
+}
+
+.tex-article .author,
+.tex-article .date {
+  text-align: center;
+}
+
+.tex-article h3,
+.tex-article h4,
+.tex-article h5 {
+  margin: 2.3rem 0 0.8rem;
+  line-height: 1.18;
+}
+
+.tex-article h3 {
+  font-size: clamp(1.45rem, 4vw, 2rem);
+}
+
+.tex-article h4 {
+  font-size: clamp(1.18rem, 3vw, 1.45rem);
+}
+
+.tex-article h5,
+.tex-article .paragraphHead {
+  font-size: 1rem;
+}
+
+.tex-article p {
+  margin: 0 0 1rem;
+}
+
+.tex-article p.indent {
+  text-indent: 0;
+}
+
+.tex-article a {
+  overflow-wrap: anywhere;
+}
+
+.tex-article .abstract {
+  margin: 2rem 0;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  background: rgba(248, 247, 243, 0.72);
+}
+
+.tex-article .abstracttitle {
+  margin-top: 0;
+  text-align: center;
+}
+
+.tex-article .tableofcontents {
+  margin: 1rem 0 2rem;
+  padding: 1rem;
+  border-left: 3px solid var(--accent);
+  background: rgba(248, 247, 243, 0.72);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+}
+
+.tex-article .tableofcontents span {
+  display: block;
+  margin: 0.22rem 0;
+}
+
+.tex-article .subsectionToc {
+  padding-left: 1rem;
+}
+
+.tex-article .subsubsectionToc {
+  padding-left: 2rem;
+}
+
+.tex-article ol,
+.tex-article ul {
+  padding-left: 1.3rem;
+}
+
+.tex-article li {
+  margin: 0.45rem 0;
+}
+
+.tex-article .newtheorem,
+.tex-article .proof {
+  margin: 1.4rem 0;
+  padding: 1rem;
+  border-left: 3px solid var(--line);
+  background: rgba(248, 247, 243, 0.52);
+}
+
+.tex-article .head,
+.tex-article [class*="cmbx"],
+.tex-article [class*="ecbx"] {
+  font-weight: 700;
+}
+
+.tex-article [class*="cmti"],
+.tex-article [class*="ecti"] {
+  font-style: italic;
+}
+
+.tex-article [class*="cmtt"],
+.tex-article [class*="ectt"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.94em;
+}
+
+.tex-article .mathjax-block,
+.tex-article .mathjax-env,
+.tex-article mjx-container[display="true"] {
+  display: block;
+  max-width: 100%;
+  margin: 1rem 0;
+  padding: 0.2rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tex-article mjx-container {
+  max-width: 100%;
+}
+
+.tex-article img {
+  max-width: 100%;
+  height: auto;
+}
+
+.tex-article .center,
+.tex-article .figure,
+.tex-article figure {
+  text-align: center;
+}
+
+.tex-article .fbox {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.tex-article .minipage {
+  max-width: 100%;
+}
+
+.tex-article table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 1rem auto;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+
+.tex-article td,
+.tex-article th {
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+}
+
+.tex-article .thebibliography dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.45rem 0.75rem;
+}
+
+.tex-article .thebibliography dt,
+.tex-article .thebibliography dd {
+  margin: 0;
+}
+
+.tex-article .thebibliography dd {
+  min-width: 0;
 }
 
 .site-footer {
@@ -414,12 +648,36 @@ h1 {
     padding: 1.2rem 0 0;
   }
 
-  .pdf-frame {
-    display: none;
+  .reader-preview,
+  .article-toolbar {
+    grid-template-columns: 1fr;
+    display: grid;
   }
 
-  .mobile-reader-note {
-    display: block;
-    margin: 0;
+  .article-toolbar .actions {
+    width: 100%;
+  }
+
+  .article-toolbar .button {
+    flex: 1 1 10rem;
+  }
+
+  .tex-article {
+    padding: 1rem;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .tex-article h1.titleHead {
+    font-size: clamp(1.85rem, 10vw, 2.75rem);
+  }
+
+  .tex-article .abstract,
+  .tex-article .newtheorem,
+  .tex-article .proof,
+  .tex-article .tableofcontents {
+    margin-left: -0.2rem;
+    margin-right: -0.2rem;
+    padding: 0.85rem;
   }
 }

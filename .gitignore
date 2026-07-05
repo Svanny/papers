@@ -18,6 +18,7 @@
 *.toc
 *.xdv
 missing
+sources/**/.html-build/
 sources/**/*.pdf
 
 # Local servers and scratch output

@@ -14,18 +14,19 @@ Site URL: <https://svanny.github.io/papers/>
 
 - `docs/`: GitHub Pages site root.
 - `docs/<paper>/`: public paper page, PDF, TeX, and bibliography files.
+- `docs/<paper>/paper.html`: semantic HTML reader generated from TeX with TeX4ht and MathJax.
 - `sources/<paper>/`: archival source package contents from the original ZIP files.
-- `scripts/build-papers.sh`: compiles PDFs from `sources/` and copies public artifacts into `docs/`.
+- `scripts/build-papers.sh`: compiles PDFs, generates semantic HTML readers, and copies public artifacts into `docs/`.
 
 ## Build
 
 Install the TeX packages required by the papers:
 
 ```sh
-tlmgr install collection-latexrecommended collection-latexextra collection-pictures
+tlmgr install collection-latexrecommended collection-latexextra collection-pictures make4ht tex4ht luaxml dvisvgm
 ```
 
-Then build the PDFs and public paper artifacts:
+Then build the PDFs, generated readers, and public paper artifacts:
 
 ```sh
 scripts/build-papers.sh

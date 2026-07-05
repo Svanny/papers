@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates by Monysovann Ly.">
+    <title>SCORES: Shelf Trajectories with Slow and Fast Components via Spectral Quadratic Surrogates | Paper Reader</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+    <script>
+      window.MathJax = {
+        tex: {
+          tags: "ams",
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [["\\[", "\\]"]],
+          processEscapes: true
+        },
+        chtml: {
+          matchFontHeight: false
+        },
+        options: {
+          ignoreHtmlClass: "tex2jax_ignore"
+        }
+      };
+    </script>
+    <script defer id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"></script>
+  </head>
+  <body class="article-body">
+    <header class="site-header">
+      <a class="brand" href="../">Monysovann Ly Papers</a>
+      <nav class="nav" aria-label="Papers">
+        <a href="../five-laws/">Five Laws</a>
+        <a href="../sena/">SENA</a>
+        <a href="../scores/">SCORES</a>
+      </nav>
+    </header>
+
+    <main class="article-page">
+      <section class="article-toolbar" aria-label="Reader links">
+        <div>
+          <a class="back-link" href="./">Paper details</a>
+          <p class="eyebrow">Ordering / spectral methods</p>
+        </div>
+        <div class="actions">
+          <a class="button" href="scores.pdf">Open PDF</a>
+          <a class="button secondary" href="scores.pdf" download>Download PDF</a>
+          <a class="button secondary" href="scores.tex">View TeX</a>
+              <a class="button secondary" href="references.bib">View BibTeX</a>
+        </div>
+      </section>
+
+      <article class="tex-article">
+<div class='maketitle'>
+                                                                                         
+                                                                                         
+                                                                                         
+                                                                                         
+
+<h1 class='titleHead'>SCORES: Shelf Trajectories with Slow and Fast Components via
+Spectral Quadratic Surrogates</h1>
+ <div class='author'><span class='cmr-12'>Monysovann Ly</span></div><br />
+<div class='date'><span class='cmr-12'>February 19, 2026</span></div>
+   </div>
+   <section class='abstract' role='doc-abstract'> 
+<h3 class='abstracttitle'>
+<span class='cmbx-10'>Abstract</span>
+</h3>
+     <p class='noindent'><span class='cmr-10'>We study online reordering of a finite set of items to reduce user navigation time while remaining
+     consistent with a drifting physical shelf layout. We argue that raw swipe adjacency is a policy
+     artifact and propose learning proximity only from consecutive </span><span class='cmti-10'>update events</span><span class='cmr-10'>. To obtain a solver
+     with  clean  spectral  structure,  we  replace  absolute  distance  costs  by  a  Laplacian  quadratic
+     surrogate that diagonalizes in the graph Fourier basis [</span><a href='#XBelkinNiyogi2002LaplacianEigenmaps'><span class='cmr-10'>1</span></a><span class='cmr-10'>, </span><a href='#XShiMalik2000NormalizedCuts'><span class='cmr-10'>7</span></a><span class='cmr-10'>]. We then formulate a two time
+     scale trajectory problem, with a slow shelf component and a fast app component coupled by a
+     proximity term and controlled by temporal smoothness. The resulting regularizers diagonalize
+     in the time frequency domain, yielding an explicit low pass interpretation for shelf drift [</span><a href='#XHodrickPrescott1997PostwarUSBusinessCycles'><span class='cmr-10'>5</span></a><span class='cmr-10'>, </span><a href='#XRavnUhlig2002HPfilterLambda'><span class='cmr-10'>6</span></a><span class='cmr-10'>].
+     A practical solution is a two stage pipeline: spectral embeddings for daily structure, temporal
+     smoothing for shelf inference, then constrained local swaps to produce valid permutations with
+     disruption caps and protection for cold items.</span>
+</p>
+</section>
+   
+<p class='noindent'><span class='paragraphHead' id='keywords'> <a id='x1-1000'></a><span class='cmbx-10x-x-109'>Keywords.</span></span>
+   Online reordering; spectral seriation; Laplacian quadratic surrogate; time frequency smoothing;
+drifting shelf inference; constrained swaps.
+   
+</p>
+   <h3 class='likesectionHead' id='contents'>  <a id='x1-2000'></a>Contents</h3>
+   <div class='tableofcontents'>
+   <span class='sectionToc'>1 <a href='#setup' id='QQ2-1-3'>Setup</a></span>
+                                                                                         
+                                                                                         
+<br />   <span class='subsectionToc'>1.1 <a href='#items-and-permutations' id='QQ2-1-4'>Items and permutations</a></span>
+<br />   <span class='subsectionToc'>1.2 <a href='#sessions-updates-and-why-swipe-adjacency-is-not-the-right-signal' id='QQ2-1-5'>Sessions, updates, and why swipe adjacency is not the right signal</a></span>
+<br />   <span class='subsectionToc'>1.3 <a href='#update-adjacency-weights' id='QQ2-1-6'>Update adjacency weights</a></span>
+<br />   <span class='subsectionToc'>1.4 <a href='#two-half-lives-fast-evidence-and-slow-evidence' id='QQ2-1-7'>Two half lives: fast evidence and slow evidence</a></span>
+<br />   <span class='sectionToc'>2 <a href='#quadratic-surrogate-that-diagonalizes-on-graphs' id='QQ2-1-8'>Quadratic surrogate that diagonalizes on graphs</a></span>
+<br />   <span class='subsectionToc'>2.1 <a href='#laplacians' id='QQ2-1-9'>Laplacians</a></span>
+<br />   <span class='subsectionToc'>2.2 <a href='#from-embeddings-to-permutations' id='QQ2-1-10'>From embeddings to permutations</a></span>
+<br />   <span class='sectionToc'>3 <a href='#trajectory-formulation-with-slow-shelf-and-fast-app-components' id='QQ2-1-11'>Trajectory formulation with slow shelf and fast app components</a></span>
+<br />   <span class='subsectionToc'>3.1 <a href='#state-variables' id='QQ2-1-12'>State variables</a></span>
+<br />   <span class='subsectionToc'>3.2 <a href='#time-domain-objective' id='QQ2-1-13'>Time domain objective</a></span>
+<br />   <span class='sectionToc'>4 <a href='#frequency-domain-view-of-shelf-drift' id='QQ2-1-14'>Frequency domain view of shelf drift</a></span>
+<br />   <span class='sectionToc'>5 <a href='#practical-solver' id='QQ2-1-15'>Practical solver</a></span>
+<br />   <span class='subsectionToc'>5.1 <a href='#stage-1-build-laplacians-from-update-events' id='QQ2-1-16'>Stage 1: build Laplacians from update events</a></span>
+<br />   <span class='subsectionToc'>5.2 <a href='#stage-2-spectral-embeddings' id='QQ2-1-17'>Stage 2: spectral embeddings</a></span>
+<br />   <span class='subsectionToc'>5.3 <a href='#stage-3-infer-a-drifting-shelf-by-time-frequency-smoothing' id='QQ2-1-18'>Stage 3: infer a drifting shelf by time frequency smoothing</a></span>
+<br />   <span class='subsectionToc'>5.4 <a href='#stage-4-inject-fast-improvements-onto-the-shelf-with-hard-caps' id='QQ2-1-19'>Stage 4: inject fast improvements onto the shelf with hard caps</a></span>
+<br />   <span class='subsectionToc'>5.5 <a href='#complexity' id='QQ2-1-20'>Complexity</a></span>
+<br />   <span class='sectionToc'>6 <a href='#notes-on-calibration' id='QQ2-1-21'>Notes on calibration</a></span>
+<br />   <span class='subsectionToc'>6.1 <a href='#hyperparameters-to-calibrate' id='QQ2-1-22'>Hyperparameters to calibrate</a></span>
+<br />   <span class='subsectionToc'>6.2 <a href='#online-hyperparameter-calibration-via-a-multiarmed-bandit' id='QQ2-1-23'>Online hyperparameter calibration via a multi-armed bandit</a></span>
+<br />   <span class='subsectionToc'>6.3 <a href='#half-lives' id='QQ2-1-30'>Half lives</a></span>
+<br />   <span class='subsectionToc'>6.4 <a href='#cold-item-weights' id='QQ2-1-31'>Cold item weights</a></span>
+<br />   <span class='sectionToc'>7 <a href='#conclusion' id='QQ2-1-32'>Conclusion</a></span>
+   </div>
+   
+   <h3 class='sectionHead' id='setup'><span class='titlemark'>1   </span>   <a id='x1-30001'></a>Setup</h3>
+   
+   <h4 class='subsectionHead' id='items-and-permutations'><span class='titlemark'>1.1   </span>   <a id='x1-40001.1'></a>Items and permutations</h4>
+<p class='noindent'>Let <span class='mathjax-inline'>\([n]:=\{1,\dots ,n\}\)</span> index items. An ordering is a permutation <span class='mathjax-inline'>\(\pi \)</span> of <span class='mathjax-inline'>\([n]\)</span>. Write <span class='mathjax-inline'>\(\mathrm {pos}_{\pi }(i)\in [n]\)</span> for the position of item <span class='mathjax-inline'>\(i\)</span> under
+<span class='mathjax-inline'>\(\pi \)</span>.
+   
+</p>
+   <h4 class='subsectionHead' id='sessions-updates-and-why-swipe-adjacency-is-not-the-right-signal'><span class='titlemark'>1.2   </span>   <a id='x1-50001.2'></a>Sessions, updates, and why swipe adjacency is not the right signal</h4>
+<p class='noindent'>A session is a sequence of visited items <span class='mathjax-inline'>\((v_1,\dots ,v_m)\)</span> with action indicators <span class='mathjax-inline'>\(a_t\in \{0,1\}\)</span> where <span class='mathjax-inline'>\(a_t=1\)</span> denotes an <span class='cmti-10x-x-109'>update event</span>. The swipe
+path <span class='mathjax-inline'>\((v_t)\)</span> depends strongly on the current UI order, so transition counts between consecutive swipes largely
+reflect current adjacency rather than user intent.
+</p><p class='indent'>   We therefore base learning on the subsequence of <span class='cmti-10x-x-109'>consecutive updates</span>. Let <span class='mathjax-inline'>\(t_1&lt;\cdots &lt;t_k\)</span> be indices with <span class='mathjax-inline'>\(a_{t_r}=1\)</span>. Define the
+update sequence </p><div class='mathjax-block'>\[ u_r := v_{t_r},\qquad r=1,\dots ,k. \]</div>
+                                                                                         
+                                                                                         
+<p class='indent'>   Optionally, collapse consecutive repeats by removing <span class='mathjax-inline'>\(u_{r+1}\)</span> whenever <span class='mathjax-inline'>\(u_{r+1}=u_r\)</span>. Let <span class='mathjax-inline'>\(\Delta _r\ge 0\)</span> be the time between update
+events <span class='mathjax-inline'>\(r\)</span> and <span class='mathjax-inline'>\(r+1\)</span>.
+   
+</p>
+   <h4 class='subsectionHead' id='update-adjacency-weights'><span class='titlemark'>1.3   </span>   <a id='x1-60001.3'></a>Update adjacency weights</h4>
+<p class='noindent'>Define a robust weight function <span class='mathjax-inline'>\(w(\Delta )\)</span>, for example <span class='mathjax-inline'>\(w(\Delta )=1\)</span> for counts, or <span class='mathjax-inline'>\(w(\Delta )=\min (\Delta ,c)\)</span> for clipped time. For a day index <span class='mathjax-inline'>\(d\)</span>, define
+symmetric update adjacency weights </p><div class='mathjax-block'>\[ \widehat {S}_{ij}(d) := \sum _{\text {sessions on day }d}\ \sum _{r=1}^{k-1} \mathbf {1}\{u_r=i,\ u_{r+1}=j\}\,w(\Delta _r) \;+\; \mathbf {1}\{u_r=j,\ u_{r+1}=i\}\,w(\Delta _r). \]</div>
+<p class='indent'>   This captures proximity only between items that are edited consecutively, which is the quantity the UI
+order can realistically reduce.
+   
+</p>
+   <h4 class='subsectionHead' id='two-half-lives-fast-evidence-and-slow-evidence'><span class='titlemark'>1.4   </span>   <a id='x1-70001.4'></a>Two half lives: fast evidence and slow evidence</h4>
+<p class='noindent'>To support two time scales, maintain two exponentially weighted estimates: </p><div class='mathjax-block'>\[ S^{\text {fast}}(d) = \rho _f S^{\text {fast}}(d-1) + (1-\rho _f)\widehat {S}(d), \qquad S^{\text {slow}}(d) = \rho _s S^{\text {slow}}(d-1) + (1-\rho _s)\widehat {S}(d), \]</div>
+<p class='indent'>   with <span class='mathjax-inline'>\(0&lt;\rho _f&lt;\rho _s&lt;1\)</span>. <span class='mathjax-inline'>\(\rho _f\)</span> reacts quickly to short term changes and <span class='mathjax-inline'>\(\rho _s\)</span> captures persistent structure.
+</p><p class='indent'>   For cold item protection we also maintain a decayed update mass </p><div class='mathjax-block'>\[ c_i(d) = \rho _c c_i(d-1) + (1-\rho _c)\widehat {c}_i(d), \qquad \widehat {c}_i(d) := \sum _{\text {sessions on day }d}\sum _{r=1}^{k}\mathbf {1}\{u_r=i\}. \]</div>
+   
+   <h3 class='sectionHead' id='quadratic-surrogate-that-diagonalizes-on-graphs'><span class='titlemark'>2   </span>   <a id='x1-80002'></a>Quadratic surrogate that diagonalizes on graphs</h3>
+   
+   <h4 class='subsectionHead' id='laplacians'><span class='titlemark'>2.1   </span>   <a id='x1-90002.1'></a>Laplacians</h4>
+<p class='noindent'>Given a symmetric similarity matrix <span class='mathjax-inline'>\(S(d)\)</span>, define degree <span class='mathjax-inline'>\(D(d)=\mathrm {diag}(S(d)\mathbf {1})\)</span> and Laplacian </p><div class='mathjax-block'>\[ L(d) := D(d) - S(d). \]</div>
+<p class='indent'>   For an embedding vector <span class='mathjax-inline'>\(x\in \mathbb {R}^n\)</span>, </p><div class='mathjax-block'>\[ x^\top L(d) x = \frac 12\sum _{i=1}^n\sum _{j=1}^n S_{ij}(d)\,(x_i-x_j)^2. \]</div>
+<p class='indent'>   This is the squared distance surrogate. It is quadratic and diagonalizes in the eigenbasis of <span class='mathjax-inline'>\(L(d)\)</span>.
+Such Laplacian quadratic forms underpin many spectral embedding and clustering relaxations
+[<a href='#XBelkinNiyogi2002LaplacianEigenmaps'>1</a>, <a href='#XShiMalik2000NormalizedCuts'>7</a>, <a href='#XDhillonGuanKulis2004KernelKmeansSpectral'>4</a>].
+   
+</p>
+   <h4 class='subsectionHead' id='from-embeddings-to-permutations'><span class='titlemark'>2.2   </span>   <a id='x1-100002.2'></a>From embeddings to permutations</h4>
+<p class='noindent'>Given an embedding <span class='mathjax-inline'>\(x\)</span>, define the induced ordering </p><div class='mathjax-block'>\[ \pi (x) := \mathrm {argsort}(x), \]</div>
+<p class='indent'>   sorting items by <span class='mathjax-inline'>\(x_i\)</span>. Spectral seriation uses the Fiedler vector, an eigenvector associated with the second
+smallest eigenvalue of <span class='mathjax-inline'>\(L(d)\)</span>: </p><div class='mathjax-block'>\[ x^{\star }(d)\in \arg \min _{x\perp \mathbf {1},\ \|x\|_2=1} x^\top L(d) x. \]</div>
+<p class='indent'>   We use <span class='mathjax-inline'>\(L^{\text {fast}}(d)\)</span> for daily structure and <span class='mathjax-inline'>\(L^{\text {slow}}(d)\)</span> for shelf structure. For additional seriation-oriented discussion and
+tooling, see Concas et al. [<a href='#XConcasFenuRodriguez2017PQSER'>2</a>, <a href='#XConcasFenuRodriguezVandebril2022DoubleFiedler'>3</a>].
+   
+                                                                                         
+                                                                                         
+</p>
+   <h3 class='sectionHead' id='trajectory-formulation-with-slow-shelf-and-fast-app-components'><span class='titlemark'>3   </span>   <a id='x1-110003'></a>Trajectory formulation with slow shelf and fast app components</h3>
+   
+   <h4 class='subsectionHead' id='state-variables'><span class='titlemark'>3.1   </span>   <a id='x1-120003.1'></a>State variables</h4>
+<p class='noindent'>For each day <span class='mathjax-inline'>\(d\in \{0,\dots ,D-1\}\)</span>:
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-12002x1'><span class='mathjax-inline'>\(x_a(d)\in \mathbb {R}^n\)</span> is the fast app embedding.
+     </li>
+<li class='enumerate' id='x1-12004x2'><span class='mathjax-inline'>\(x_s(d)\in \mathbb {R}^n\)</span> is the slow shelf embedding.
+     </li>
+<li class='enumerate' id='x1-12006x3'><span class='mathjax-inline'>\(\pi _a(d)=\pi (x_a(d))\)</span> is the shown order after rounding and constraints.
+     </li>
+<li class='enumerate' id='x1-12008x4'><span class='mathjax-inline'>\(\pi _s(d)=\pi (x_s(d))\)</span> is the inferred shelf order after rounding.</li></ol>
+   
+   <h4 class='subsectionHead' id='time-domain-objective'><span class='titlemark'>3.2   </span>   <a id='x1-130003.2'></a>Time domain objective</h4>
+<p class='noindent'>We propose the following quadratic trajectory objective: </p><div class='mathjax-env mathjax-align'>\begin{align} \min _{\{x_a(d),x_s(d)\}} \ &amp;\sum _{d=0}^{D-1} x_a(d)^\top L^{\text {fast}}(d)\,x_a(d) \;+\; \sum _{d=0}^{D-1} x_s(d)^\top L^{\text {slow}}(d)\,x_s(d) \label {eq:data_terms} \\ &amp;\;+\; \sum _{d=0}^{D-1} \|x_a(d)-x_s(d)\|_{\Gamma (d)}^2 \label {eq:coupling} \\ &amp;\;+\; \sum _{d=1}^{D-1} \|x_s(d)-x_s(d-1)\|_{K(d)}^2 \;+\; \sum _{d=2}^{D-1} \|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H(d)}^2. \label {eq:temporal_smooth} \end{align}</div>
+<p><a id='x1-13001r1'></a>
+</p><p class='indent'>   Constraints per day: </p><div class='mathjax-block'>\[ x_a(d)\perp \mathbf {1},\ \|x_a(d)\|_2=1, \qquad x_s(d)\perp \mathbf {1},\ \|x_s(d)\|_2=1. \]</div>
+<p class='indent'>   Here <span class='mathjax-inline'>\(\|z\|_{M}^2 := z^\top M z\)</span> with diagonal positive semidefinite matrices:
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-13003x1'><span class='mathjax-inline'>\(\Gamma (d)\)</span> couples app and shelf.
+     </li>
+<li class='enumerate' id='x1-13005x2'><span class='mathjax-inline'>\(K(d)\)</span> penalizes shelf velocity.
+                                                                                         
+                                                                                         
+     </li>
+<li class='enumerate' id='x1-13007x3'><span class='mathjax-inline'>\(H(d)\)</span> penalizes shelf acceleration.</li></ol>
+<p class='noindent'>Item wise cold protection enters by setting diagonal weights as increasing functions of low activity. A simple
+choice is </p><div class='mathjax-block'>\[ \Gamma _{ii}(d)=\gamma \,\lambda _i(d),\quad K_{ii}(d)=\kappa \,\lambda _i(d),\quad H_{ii}(d)=\eta \,\lambda _i(d), \]</div>
+<p class='indent'>   with <span class='mathjax-inline'>\(\lambda _i(d)\)</span> large when <span class='mathjax-inline'>\(c_i(d)\)</span> is small, for example </p><div class='mathjax-block'>\[ \lambda _i(d)=\lambda _{\max }\exp (-\beta c_i(d)). \]</div>
+<p class='indent'>   Cold items then resist both injection and drift.
+   
+</p>
+   <h3 class='sectionHead' id='frequency-domain-view-of-shelf-drift'><span class='titlemark'>4   </span>   <a id='x1-140004'></a>Frequency domain view of shelf drift</h3>
+<p class='noindent'>This section explains the slow and fast split in time frequency terms. For clarity, ignore the graph data
+terms (<a href='#x1-13001r1'>1</a>) and consider the shelf smoothing subproblem with <span class='mathjax-inline'>\(x_a(d)\)</span> fixed: </p><div class='mathjax-env mathjax-equation'>\begin{equation} \min _{\{x_s(d)\}} \ \sum _{d=0}^{D-1}\|x_a(d)-x_s(d)\|_{\Gamma }^2 + \sum _{d=1}^{D-1}\|x_s(d)-x_s(d-1)\|_{K}^2 + \sum _{d=2}^{D-1}\|x_s(d)-2x_s(d-1)+x_s(d-2)\|_{H}^2, \label {eq:shelf_smooth_only} \end{equation}</div>
+<p><a id='x1-14001r2'></a>
+</p><p class='indent'>   with constant diagonal weights <span class='mathjax-inline'>\(\Gamma ,K,H\)</span> for exposition.
+</p><p class='indent'>   Let <span class='mathjax-inline'>\(X_a(\omega )\)</span> and <span class='mathjax-inline'>\(X_s(\omega )\)</span> be the discrete Fourier transforms over <span class='mathjax-inline'>\(d\)</span> applied coordinate wise. Define </p><div class='mathjax-block'>\[ g(\omega )=4\sin ^2(\pi \omega /D). \]</div>
+<p class='indent'>   Then the first difference term contributes a factor <span class='mathjax-inline'>\(g(\omega )\)</span> and the second difference contributes <span class='mathjax-inline'>\(g(\omega )^2\)</span>. This
+“trend–cycle” style smoothing viewpoint is closely related to second-difference penalization as
+in the Hodrick–Prescott filter [<a href='#XHodrickPrescott1997PostwarUSBusinessCycles'>5</a>, <a href='#XRavnUhlig2002HPfilterLambda'>6</a>]. The objective (<a href='#x1-14001r2'>2</a>) diagonalizes by <span class='mathjax-inline'>\(\omega \)</span> and by coordinate:
+</p><div class='mathjax-block'>\[ \sum _{\omega =0}^{D-1} \left ( \|X_a(\omega )-X_s(\omega )\|_{\Gamma }^2 + g(\omega )\|X_s(\omega )\|_{K}^2 + g(\omega )^2\|X_s(\omega )\|_{H}^2 \right ). \]</div>
+<p class='indent'>   The minimizer has the explicit low pass form, coordinate wise: </p><div class='mathjax-block'>\[ X_{s,i}(\omega ) = \frac {\Gamma _{ii}}{\Gamma _{ii}+K_{ii}\,g(\omega )+H_{ii}\,g(\omega )^2}\ X_{a,i}(\omega ). \]</div>
+<p class='indent'>   Low frequencies with small <span class='mathjax-inline'>\(g(\omega )\)</span> pass into the shelf, high frequencies are suppressed. The residual <span class='mathjax-inline'>\(X_a(\omega )-X_s(\omega )\)</span> is a
+complementary high pass, which is the fast component injected into the UI.
+   
+</p>
+   <h3 class='sectionHead' id='practical-solver'><span class='titlemark'>5   </span>   <a id='x1-150005'></a>Practical solver</h3>
+   
+   <h4 class='subsectionHead' id='stage-1-build-laplacians-from-update-events'><span class='titlemark'>5.1   </span>   <a id='x1-160005.1'></a>Stage 1: build Laplacians from update events</h4>
+<p class='noindent'>On each day <span class='mathjax-inline'>\(d\)</span>:
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-16002x1'>Parse sessions to obtain update sequences <span class='mathjax-inline'>\((u_r)\)</span> and inter update times <span class='mathjax-inline'>\(\Delta _r\)</span>.
+     </li>
+<li class='enumerate' id='x1-16004x2'>Accumulate <span class='mathjax-inline'>\(\widehat {S}(d)\)</span> via consecutive updates.
+                                                                                         
+                                                                                         
+     </li>
+<li class='enumerate' id='x1-16006x3'>Update <span class='mathjax-inline'>\(S^{\text {fast}}(d)\)</span> and <span class='mathjax-inline'>\(S^{\text {slow}}(d)\)</span> with two forgetting factors.
+     </li>
+<li class='enumerate' id='x1-16008x4'>Form Laplacians <span class='mathjax-inline'>\(L^{\text {fast}}(d)\)</span> and <span class='mathjax-inline'>\(L^{\text {slow}}(d)\)</span>.</li></ol>
+   
+   <h4 class='subsectionHead' id='stage-2-spectral-embeddings'><span class='titlemark'>5.2   </span>   <a id='x1-170005.2'></a>Stage 2: spectral embeddings</h4>
+<p class='noindent'>Compute daily fast embedding <span class='mathjax-inline'>\(x_a^{(0)}(d)\)</span> as the Fiedler vector of <span class='mathjax-inline'>\(L^{\text {fast}}(d)\)</span>. Compute daily slow embedding <span class='mathjax-inline'>\(x_s^{(0)}(d)\)</span> as the Fiedler
+vector of <span class='mathjax-inline'>\(L^{\text {slow}}(d)\)</span>.
+</p><p class='indent'>   These are graph frequency solutions, diagonalized by the eigenbasis of each Laplacian.
+   
+</p>
+   <h4 class='subsectionHead' id='stage-3-infer-a-drifting-shelf-by-time-frequency-smoothing'><span class='titlemark'>5.3   </span>   <a id='x1-180005.3'></a>Stage 3: infer a drifting shelf by time frequency smoothing</h4>
+<p class='noindent'>Use (<a href='#x1-14001r2'>2</a>) to smooth the slow embedding trajectory over time. There are two equivalent implementations:
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-18002x1'>Frequency domain: take the DFT over <span class='mathjax-inline'>\(d\)</span>, apply the low pass gain above coordinate wise, then
+     invert the DFT.
+     </li>
+<li class='enumerate' id='x1-18004x2'>Time  domain:  solve  the  banded  normal  equations  induced  by  (<a href='#x1-14001r2'>2</a>),  separately  for  each
+     coordinate.</li></ol>
+<p class='noindent'>Denote the smoothed result by <span class='mathjax-inline'>\(x_s(d)\)</span> and set <span class='mathjax-inline'>\(\pi _s(d)=\pi (x_s(d))\)</span>.
+   
+</p>
+   <h4 class='subsectionHead' id='stage-4-inject-fast-improvements-onto-the-shelf-with-hard-caps'><span class='titlemark'>5.4   </span>   <a id='x1-190005.4'></a>Stage 4: inject fast improvements onto the shelf with hard caps</h4>
+<p class='noindent'>We produce a valid shown permutation by starting from the shelf order and applying a bounded number
+of local moves guided by the fast objective. Let <span class='mathjax-inline'>\(\pi \gets \pi _s(d)\)</span>.
+</p><p class='indent'>   Define a discrete fast score for swaps using the update adjacency weights: </p><div class='mathjax-block'>\[ \widetilde {J}_{\text {fast}}(\pi ;d) := \sum _{i&lt;j} S^{\text {fast}}_{ij}(d)\ \big (\mathrm {pos}_{\pi }(i)-\mathrm {pos}_{\pi }(j)\big )^2, \]</div>
+<p class='indent'>   which is consistent with the quadratic surrogate.
+</p><p class='indent'>   Apply constrained local search:
+                                                                                         
+                                                                                         
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-19002x1'>Choose a daily swap budget <span class='mathjax-inline'>\(B\)</span> and a window radius <span class='mathjax-inline'>\(w\)</span>.
+     </li>
+<li class='enumerate' id='x1-19004x2'>Restrict candidate swaps to pairs within <span class='mathjax-inline'>\(w\)</span> positions in the current order.
+     </li>
+<li class='enumerate' id='x1-19006x3'>Enforce a per item displacement cap <span class='mathjax-inline'>\(r_i(d)\)</span> relative to <span class='mathjax-inline'>\(\pi _s(d)\)</span>, with small caps for cold items.
+     </li>
+<li class='enumerate' id='x1-19008x4'>Accept a swap only if it reduces <span class='mathjax-inline'>\(\widetilde {J}_{\text {fast}}(\pi ;d)\)</span> and respects caps.</li></ol>
+<p class='noindent'>Return <span class='mathjax-inline'>\(\pi _a(d)=\pi \)</span>.
+</p><p class='indent'>   This injection step yields fast adaptation without rewriting the shelf. Cold items remain
+stable because they rarely participate in beneficial swaps and their displacement caps are
+small.
+   
+</p>
+   <h4 class='subsectionHead' id='complexity'><span class='titlemark'>5.5   </span>   <a id='x1-200005.5'></a>Complexity</h4>
+<p class='noindent'>For sparse <span class='mathjax-inline'>\(S(d)\)</span> the Laplacian is sparse. Computing a Fiedler vector can be done with iterative methods whose
+dominant cost is sparse matrix vector products. The swap phase can be implemented with incremental
+score updates that touch only edges incident to swapped items.
+   
+</p>
+   <h3 class='sectionHead' id='notes-on-calibration'><span class='titlemark'>6   </span>   <a id='x1-210006'></a>Notes on calibration</h3>
+   
+   <h4 class='subsectionHead' id='hyperparameters-to-calibrate'><span class='titlemark'>6.1   </span>   <a id='x1-220006.1'></a>Hyperparameters to calibrate</h4>
+<p class='noindent'>This model has several tunable hyperparameters that control (i) how evidence is aggregated in time, (ii)
+how strongly the shelf is smoothed, and (iii) how disruptive the fast “injection” step is allowed to be. The
+main quantities to calibrate are: </p>
+     <ul class='itemize1'>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Update-pair weighting: </span>parameters inside <span class='mathjax-inline'>\(w(\Delta )\)</span> (e.g., clip level <span class='mathjax-inline'>\(c\)</span> if using <span class='mathjax-inline'>\(w(\Delta )=\min (\Delta ,c)\)</span>, or any other robust
+     time-to-weight map).
+     </li>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Fast/slow evidence time scales: </span>forgetting factors <span class='mathjax-inline'>\(\rho _f\)</span> (fast) and <span class='mathjax-inline'>\(\rho _s\)</span> (slow).
+     </li>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Cold-item mass time scale: </span>forgetting factor <span class='mathjax-inline'>\(\rho _c\)</span> used in <span class='mathjax-inline'>\(c_i(d)\)</span>.
+     </li>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Shelf smoothing strength: </span>the trajectory regularization weights in the shelf smoother (e.g.,
+     <span class='mathjax-inline'>\(\lambda _1,\lambda _2\)</span> in (<a href='#x1-14001r2'>2</a>), or equivalently any frequency-domain low-pass cutoff parameter).
+     </li>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Swap-search aggressiveness: </span>daily swap budget <span class='mathjax-inline'>\(B\)</span> and window radius <span class='mathjax-inline'>\(w\)</span>.
+     </li>
+     <li class='itemize'><span class='cmbx-10x-x-109'>Displacement-cap schedule: </span>cap endpoints <span class='mathjax-inline'>\(r_{\min },r_{\max }\)</span> and the coldness scale <span class='mathjax-inline'>\(\tau _c\)</span> used in <span class='mathjax-inline'>\(r_i(d)\)</span>.</li></ul>
+   
+   <h4 class='subsectionHead' id='online-hyperparameter-calibration-via-a-multiarmed-bandit'><span class='titlemark'>6.2   </span>   <a id='x1-230006.2'></a>Online hyperparameter calibration via a multi-armed bandit</h4>
+<p class='noindent'>We calibrate the SCORES hyperparameters online using a multi-armed bandit (MAB). Each arm
+corresponds to a full configuration of discrete hyperparameter choices drawn from plausible ranges. The
+bandit chooses a configuration each day, we run the SCORES solver with that configuration,
+deploy the resulting ordering, then observe a binary improvement label from user interaction
+metrics.
+   
+</p>
+<p class='noindent'><span class='paragraphHead' id='arms-as-discrete-configurations'> <a id='x1-24000'></a><span class='cmbx-10x-x-109'>Arms as discrete configurations.</span></span>
+   Let <span class='mathjax-inline'>\(\theta \)</span> denote the vector of tunable hyperparameters, for example clipping inside <span class='mathjax-inline'>\(w(\Delta )\)</span>, forgetting factors <span class='mathjax-inline'>\((\rho _f,\rho _s,\rho _c)\)</span>,
+shelf smoothing strengths, swap budget <span class='mathjax-inline'>\(B\)</span>, window radius <span class='mathjax-inline'>\(w\)</span>, and displacement cap parameters. For each
+coordinate <span class='mathjax-inline'>\(\theta _j\)</span>, choose a small discrete set <span class='mathjax-inline'>\(\mathcal {G}_j\)</span> of plausible values. The candidate configuration set is then
+</p><div class='mathjax-block'>\[ \Theta := \mathcal {G}_1 \times \cdots \times \mathcal {G}_p. \]</div>
+<p class='indent'>   Each arm <span class='mathjax-inline'>\(a\in [A]\)</span> corresponds to one configuration <span class='mathjax-inline'>\(\theta ^{(a)}\in \Theta \)</span>. If <span class='mathjax-inline'>\(|\Theta |\)</span> is too large, we subsample a manageable set of arms
+by randomized selection or a space filling design over the discrete grid.
+   
+                                                                                         
+                                                                                         
+</p>
+<p class='noindent'><span class='paragraphHead' id='daily-decision-loop'> <a id='x1-25000'></a><span class='cmbx-10x-x-109'>Daily decision loop.</span></span>
+   On day <span class='mathjax-inline'>\(d\)</span>, the bandit selects an arm <span class='mathjax-inline'>\(a_d\)</span> and therefore a configuration <span class='mathjax-inline'>\(\theta ^{(a_d)}\)</span>. We then run the full SCORES
+pipeline using <span class='mathjax-inline'>\(\theta ^{(a_d)}\)</span> and deploy the resulting shown permutation: </p><div class='mathjax-block'>\[ \pi _a(d) \;=\; \mathrm {SCORES}\big (\widehat {S}(d),\ S^{\mathrm {fast}}(d),\ S^{\mathrm {slow}}(d),\ c(d);\ \theta ^{(a_d)}\big ). \]</div>
+<p class='indent'>   All safety constraints remain enforced by the SCORES solver, including bounded swap budgets and
+per item displacement caps.
+   
+</p>
+<p class='noindent'><span class='paragraphHead' id='binary-improvement-label-as-reward'> <a id='x1-26000'></a><span class='cmbx-10x-x-109'>Binary improvement label as reward.</span></span>
+   Let <span class='mathjax-inline'>\(T(d)\)</span> be the total time spent in the update view on day <span class='mathjax-inline'>\(d\)</span>, and let <span class='mathjax-inline'>\(W(d)\)</span> be the total number of swipes on day
+<span class='mathjax-inline'>\(d\)</span>. We define a binary ground truth improvement label </p><div class='mathjax-block'>\[ y_d := \mathbf {1}\Big \{ T(d) &lt; T(d-1)\ \ \text {or}\ \ W(d) &lt; W(d-1)\Big \}, \]</div>
+<p class='indent'>   with <span class='mathjax-inline'>\(y_d=0\)</span> otherwise. This label serves as the bandit reward. The goal is to choose configurations that
+maximize the probability of improvement.
+   
+</p>
+<p class='noindent'><span class='paragraphHead' id='bandit-update-and-selection-rule'> <a id='x1-27000'></a><span class='cmbx-10x-x-109'>Bandit update and selection rule.</span></span>
+   We model each arm as a Bernoulli process with unknown success probability <span class='mathjax-inline'>\(p_a\)</span>. A simple and effective
+choice is Thompson sampling with independent Beta posteriors: </p><div class='mathjax-block'>\[ p_a \sim \mathrm {Beta}(\alpha _a,\beta _a). \]</div>
+<p class='indent'>   Initialize <span class='mathjax-inline'>\((\alpha _a,\beta _a)\)</span> to small pseudo counts, for example <span class='mathjax-inline'>\(\alpha _a=\beta _a=1\)</span>. Each day:
+     </p><ol class='enumerate1'>
+<li class='enumerate' id='x1-27002x1'>For each arm <span class='mathjax-inline'>\(a\)</span>, sample <span class='mathjax-inline'>\(\widetilde {p}_a \sim \mathrm {Beta}(\alpha _a,\beta _a)\)</span>.
+     </li>
+<li class='enumerate' id='x1-27004x2'>Select <span class='mathjax-inline'>\(a_d \in \arg \max _a \widetilde {p}_a\)</span>.
+     </li>
+<li class='enumerate' id='x1-27006x3'>Deploy SCORES using <span class='mathjax-inline'>\(\theta ^{(a_d)}\)</span> and observe <span class='mathjax-inline'>\(y_d\)</span>.
+     </li>
+<li class='enumerate' id='x1-27008x4'>
+     <p class='noindent'>Update only the played arm: </p><div class='mathjax-block'>\[ \alpha _{a_d} \leftarrow \alpha _{a_d} + y_d, \qquad \beta _{a_d} \leftarrow \beta _{a_d} + (1-y_d). \]</div>
+     </li></ol>
+<p class='noindent'>This produces an exploration exploitation tradeoff automatically, favoring arms with high estimated
+improvement probability while still exploring uncertain arms.
+   
+                                                                                         
+                                                                                         
+</p>
+<p class='noindent'><span class='paragraphHead' id='stopping-and-locking-the-configuration'> <a id='x1-28000'></a><span class='cmbx-10x-x-109'>Stopping and locking the configuration.</span></span>
+   After an exploration period of <span class='mathjax-inline'>\(D_{\mathrm {explore}}\)</span> days, we choose a single configuration for stable deployment, for
+example </p><div class='mathjax-block'>\[ \widehat {a} \in \arg \max _a \mathbb {E}[p_a] = \arg \max _a \frac {\alpha _a}{\alpha _a+\beta _a}, \]</div>
+<p class='indent'>   and then run SCORES with <span class='mathjax-inline'>\(\theta ^{(\widehat {a})}\)</span> as the default. Optionally, we continue to run the bandit at a low
+exploration rate to adapt to long run drift in user behavior.
+   
+</p>
+<p class='noindent'><span class='paragraphHead' id='remark-on-nonstationarity'> <a id='x1-29000'></a><span class='cmbx-10x-x-109'>Remark on nonstationarity.</span></span>
+   Because user behavior and inventory regimes can drift, a discounted or sliding window update can be
+used to emphasize recent outcomes. One simple approach is to apply exponential forgetting to the pseudo
+counts before adding the new observation, which yields a recency weighted bandit that tracks gradual
+change.
+   
+</p>
+   <h4 class='subsectionHead' id='half-lives'><span class='titlemark'>6.3   </span>   <a id='x1-300006.3'></a>Half lives</h4>
+<p class='noindent'>Set <span class='mathjax-inline'>\(\rho _f\)</span> with a short half life that matches behavioral drift, such as days. Set <span class='mathjax-inline'>\(\rho _s\)</span> with a long half life that
+matches shelf drift, such as weeks or months.
+   
+</p>
+   <h4 class='subsectionHead' id='cold-item-weights'><span class='titlemark'>6.4   </span>   <a id='x1-310006.4'></a>Cold item weights</h4>
+<p class='noindent'>Use <span class='mathjax-inline'>\(c_i(d)\)</span> to define <span class='mathjax-inline'>\(\lambda _i(d)\)</span>, then derive: </p><div class='mathjax-block'>\[ r_i(d) = r_{\min } + (r_{\max }-r_{\min })\frac {c_i(d)}{c_i(d)+\tau _c}, \]</div>
+<p class='indent'>   so hot items may move more and cold items stay near shelf.
+   
+</p>
+   <h3 class='sectionHead' id='conclusion'><span class='titlemark'>7   </span>   <a id='x1-320007'></a>Conclusion</h3>
+<p class='noindent'>SCORES is formulated as a two time scale trajectory problem. Update to update adjacency provides an
+intent aligned signal and avoids self reinforcing swipe adjacency. A Laplacian quadratic surrogate yields
+spectral diagonalization over items, and temporal difference penalties yield diagonalization over time
+frequencies. The resulting system supports a drifting shelf estimate and bounded fast injections into the
+shown ordering with explicit stability controls.
+   
+</p>
+   <h3 class='likesectionHead' id='references'>  <a id='x1-33000'></a>References</h3>
+<p class='noindent'>
+                                                                                         
+                                                                                         
+   </p><section class='thebibliography' role='doc-bibliography'><dl><dt>
+<a id='XBelkinNiyogi2002LaplacianEigenmaps'></a>[1] </dt><dd><a id='XBelkinNiyogi2002LaplacianEigenmaps'></a>Mikhail Belkin and Partha Niyogi. Laplacian eigenmaps and spectral techniques for embedding
+   and clustering. In <span class='cmti-10x-x-109'>Advances in Neural Information Processing Systems 14</span>, 2002. NIPS 2001.
+   </dd><dt>
+<a id='XConcasFenuRodriguez2017PQSER'></a>[2] </dt><dd><a id='XConcasFenuRodriguez2017PQSER'></a>Anna Concas, Caterina Fenu, and Giuseppe Rodriguez. PQSER: A Matlab package for spectral
+   seriation. <span class='cmti-10x-x-109'>arXiv preprint arXiv:1711.05677</span>, 2017.
+   </dd><dt>
+<a id='XConcasFenuRodriguezVandebril2022DoubleFiedler'></a>[3] </dt><dd><a id='XConcasFenuRodriguezVandebril2022DoubleFiedler'></a>Anna Concas, Caterina Fenu, Giuseppe Rodriguez, and Raf Vandebril. The seriation problem
+   in the presence of a double Fiedler value. <span class='cmti-10x-x-109'>arXiv preprint arXiv:2204.03362</span>, 2022.
+   </dd><dt>
+<a id='XDhillonGuanKulis2004KernelKmeansSpectral'></a>[4] </dt><dd><a id='XDhillonGuanKulis2004KernelKmeansSpectral'></a>Inderjit S.  Dhillon,  Yuqiang  Guan,  and  Brian  Kulis.   Kernel  k-means,  spectral  clustering
+   and normalized cuts.  <span class='cmti-10x-x-109'>Proceedings of the Tenth ACM SIGKDD International Conference on
+   Knowledge Discovery and Data Mining</span>, 2004. Often cited for the equivalence between weighted
+   kernel k-means and normalized cuts relaxations.
+   </dd><dt>
+<a id='XHodrickPrescott1997PostwarUSBusinessCycles'></a>[5] </dt><dd><a id='XHodrickPrescott1997PostwarUSBusinessCycles'></a>Robert J.  Hodrick  and  Edward C.  Prescott.    Postwar  u.s.  business  cycles:  An  empirical
+   investigation. <span class='cmti-10x-x-109'>Journal of Money, Credit and Banking</span>, 1997.
+   </dd><dt>
+<a id='XRavnUhlig2002HPfilterLambda'></a>[6] </dt><dd><a id='XRavnUhlig2002HPfilterLambda'></a>Morten O. Ravn and Harald Uhlig. On adjusting the Hodrick–Prescott filter for the frequency
+   of observations. <span class='cmti-10x-x-109'>The Review of Economics and Statistics</span>, 2002.
+   </dd><dt>
+<a id='XShiMalik2000NormalizedCuts'></a>[7] </dt><dd><a id='XShiMalik2000NormalizedCuts'></a>Jianbo Shi and Jitendra Malik. Normalized cuts and image segmentation. <span class='cmti-10x-x-109'>IEEE Transactions
+   on Pattern Analysis and Machine Intelligence</span>, 2000.
+   </dd></dl></section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>Paper content licensed under CC BY 4.0.</p>
+    </footer>
+  </body>
+</html>
