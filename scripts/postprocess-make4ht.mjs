@@ -96,8 +96,8 @@ function sourceLabel(fileName) {
 }
 
 const sourceLinks = [
-  `<a class="button secondary" href="${escapeHtml(texName)}">View TeX</a>`,
-  ...sourceFiles.map((fileName) => `<a class="button secondary" href="${escapeHtml(fileName)}">View ${escapeHtml(sourceLabel(fileName))}</a>`),
+  `<a class="button secondary" href="${escapeHtml(texName)}">TeX</a>`,
+  ...sourceFiles.map((fileName) => `<a class="button secondary" href="${escapeHtml(fileName)}">${escapeHtml(sourceLabel(fileName))}</a>`),
 ].join("\n              ");
 
 const page = `<!doctype html>
@@ -139,14 +139,14 @@ const page = `<!doctype html>
     </header>
 
     <main class="article-page">
-      <section class="article-toolbar" aria-label="Reader links">
+      <section class="article-toolbar" aria-label="Paper links">
         <div>
-          <a class="back-link" href="./">Paper details</a>
+          <a class="back-link" href="./">Details</a>
           <p class="eyebrow">${escapeHtml(paperKicker)}</p>
         </div>
         <div class="actions">
-          <a class="button" href="${escapeHtml(pdfName)}">Open PDF</a>
-          <a class="button secondary" href="${escapeHtml(pdfName)}" download>Download PDF</a>
+          <a class="button" href="${escapeHtml(pdfName)}">PDF</a>
+          <a class="button secondary" href="${escapeHtml(pdfName)}" download>Download</a>
           ${sourceLinks}
         </div>
       </section>
