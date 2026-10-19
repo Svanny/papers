@@ -130,7 +130,7 @@ const page = `<!doctype html>
   </head>
   <body class="article-body">
     <header class="site-header">
-      <a class="brand" href="../">Monysovann Ly Papers</a>
+      <a class="brand" href="../">Monysovann Ly's</a>
       <nav class="nav" aria-label="Papers">
         <a href="../five-laws/">Five Laws</a>
         <a href="../sena/">SENA</a>
