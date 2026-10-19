@@ -735,15 +735,3 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
-
-.archive-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem 3rem;
-}
-.archive-footer p { width: auto; max-width: 70ch; margin: 0; }
-.archive-footer > .button { flex-shrink: 0; }
-@media (max-width: 860px) {
-  .archive-footer { align-items: flex-start; flex-direction: column; }
-}
