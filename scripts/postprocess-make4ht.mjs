@@ -131,11 +131,6 @@ const page = `<!doctype html>
   <body class="article-body">
     <header class="site-header">
       <a class="brand" href="../">Monysovann Ly's</a>
-      <nav class="nav" aria-label="Papers">
-        <a href="../five-laws/">Five Laws</a>
-        <a href="../sena/">SENA</a>
-        <a href="../scores/">SCORES</a>
-      </nav>
     </header>
 
     <main class="article-page">
