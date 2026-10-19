@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The complete condensed edition of Neural Networks Are Already Clean, including all 28 substantive appendix sections, measurements, and original bibliography.">
-  <meta name="author" content="Nick Cammarata · Goodfire">
-  <meta name="source-sha256" content="d7e1de252eae0dcc6096fb003492bedef8b9c5ce25e730aaffbd1efa17b97c93">
-  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <title>Neural Networks Are Already Clean — Condensed edition</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Networks Are Already Clean — Condensed edition</title>
+<meta name="description" content="An attributed condensation of Nick Cammarata’s essay, published by Goodfire in 2026.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="../assets/condensed-reader.css">
   <!--
 Embedded font: Droid Sans Fallback, subset to the six CJK characters in this edition.
 Licensed under the Apache License, Version 2.0.
@@ -218,188 +218,29 @@ The subset is embedded solely to make the document readable offline.
    limitations under the License.
 
 -->
-<style>@font-face {
-  font-family: "Condensed CJK";
-  src: url("data:font/ttf;base64,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") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+4E19, U+5D0E, U+732B, U+859B, U+916E, U+9178;
-}
-
-:root {
-  color-scheme: light;
-  --ink: #20272c;
-  --muted: #5b646b;
-  --accent: #22565a;
-  --paper: #ffffff;
-  --canvas: #f4f5f3;
-  --line: #dbe1df;
-  --soft: #eef3f1;
-  --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Condensed CJK", sans-serif;
-  --serif: Georgia, "Times New Roman", "Noto Serif", "Condensed CJK", serif;
-}
-* { box-sizing: border-box; }
-html { scroll-padding-top: 1.5rem; }
-body { margin: 0; background: var(--canvas); color: var(--ink); }
-a { color: var(--accent); text-decoration-thickness: .07em; text-underline-offset: .18em; }
-a:hover { color: #123c40; }
-a:focus-visible, summary:focus-visible, .table-scroll:focus-visible {
-  outline: 3px solid #b28132; outline-offset: 4px; border-radius: 2px;
-}
-.skip-link {
-  position: absolute; top: .7rem; left: .7rem; z-index: 10;
-  padding: .75rem 1rem; background: var(--paper); font: 600 1rem var(--sans);
-  transform: translateY(-180%);
-}
-.skip-link:focus { transform: translateY(0); }
-.shell {
-  display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 67rem);
-  gap: 2.75rem; max-width: 94rem; margin: 0 auto; padding: 2.5rem 2rem 5rem;
-  align-items: start;
-}
-.desktop-contents {
-  position: sticky; top: 2rem; max-height: calc(100vh - 4rem); overflow-y: auto;
-  scrollbar-width: thin; padding: .1rem 1.2rem 1rem .1rem;
-  font: .85rem/1.45 var(--sans); color: var(--muted);
-}
-.contents-heading {
-  margin: 0 0 .8rem; font: 700 .78rem/1.2 var(--sans);
-  text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
-}
-.contents-top { display: inline-block; margin-bottom: 1rem; font-weight: 650; }
-.desktop-contents ol, .mobile-contents ol { list-style: none; padding: 0; margin: 0; }
-.desktop-contents > ol > li, .mobile-contents nav > ol > li { margin-bottom: 1.05rem; }
-.desktop-contents li > a, .mobile-contents li > a {
-  display: block; padding: .24rem 0; text-decoration: none;
-}
-.desktop-contents > ol > li > a, .mobile-contents nav > ol > li > a { font-weight: 700; }
-.desktop-contents ol ol, .mobile-contents ol ol {
-  padding-left: .85rem; margin: .3rem 0 .45rem; border-left: 1px solid var(--line);
-}
-.desktop-contents ol ol ol, .mobile-contents ol ol ol { font-size: .94em; }
-.desktop-contents li > a:hover, .mobile-contents li > a:hover { text-decoration: underline; }
-main { min-width: 0; }
-article {
-  background: var(--paper); padding: 3.3rem clamp(1.5rem, 4.2vw, 4.1rem) 4rem;
-  border: 1px solid #e1e5e2; border-radius: .3rem;
-  font: 1.075rem/1.68 var(--serif); overflow-wrap: break-word;
-}
-.document-header { padding-bottom: 1.5rem; margin-bottom: 2.25rem; border-bottom: 1px solid var(--line); }
-.document-header h1 {
-  font: 700 clamp(2.35rem, 4.4vw, 3.4rem)/1.09 var(--serif);
-  letter-spacing: -.04em; margin: 0 0 1.1rem; max-width: 17ch;
-}
-.document-header p { font-family: var(--sans); }
-.document-header p:first-of-type {
-  color: var(--accent); font-size: .82rem; text-transform: uppercase; letter-spacing: .08em;
-}
-.document-header p:nth-of-type(2) { color: var(--muted); font-size: .91rem; }
-.document-header p:last-of-type {
-  color: var(--muted); font-size: .91rem; line-height: 1.65; margin-top: 1.35rem;
-}
-h2, h3, h4, h5, h6 { font-family: var(--sans); color: #1e383b; }
-h2 { font-size: 1.8rem; line-height: 1.22; letter-spacing: -.025em; margin: 3.25rem 0 1rem; }
-h2.chapter { padding-top: 1.3rem; border-top: 2px solid #7b9693; margin-top: 4rem; }
-h3 { font-size: 1.22rem; line-height: 1.35; margin: 2.75rem 0 .9rem; }
-h4 { font-size: 1.06rem; line-height: 1.4; margin: 2.1rem 0 .75rem; }
-h2 a, h3 a, h4 a { color: inherit; text-decoration-color: #b6c9c7; }
-h2, h3, h4, h5, h6 { scroll-margin-top: 1.5rem; }
-p { margin: 0 0 1.05rem; }
-strong { font-weight: 700; }
-blockquote {
-  margin: 1.6rem 0; border-left: 3px solid #adc2bb; padding: .2rem 0 .2rem 1.1rem;
-  color: #36444a;
-}
-ul, ol { padding-left: 1.65rem; margin: 1rem 0 1.4rem; }
-li { padding-left: .12rem; margin: .3rem 0; }
-li > p { margin-bottom: .6rem; }
-code { font: .87em ui-monospace, "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; }
-p code, td code, th code { padding: .04em .2em; background: #f1f4f3; border-radius: .2em; }
-pre { padding: 1rem; overflow: auto; background: #f1f4f3; line-height: 1.5; }
-.table-scroll {
-  max-width: 100%; overflow-x: auto; margin: 1.55rem 0 1.9rem;
-  border: 1px solid #cfdad6; border-radius: .3rem; scrollbar-width: thin;
-  overscroll-behavior-x: contain;
-}
-table {
-  width: 100%; border-collapse: collapse; margin: 0;
-  font: .85rem/1.5 var(--sans); min-width: 31rem;
-}
-.table-scroll[data-columns="5"] table { min-width: 42rem; }
-.table-scroll[data-columns="6"] table { min-width: 47rem; }
-.table-scroll[data-columns="7"] table { min-width: 53rem; }
-th, td { padding: .65rem .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
-thead th { background: #eaf0ed; color: #193b3e; font-weight: 700; border-bottom-color: #b6c9c2; }
-tbody th { font-weight: 600; }
-tbody tr:nth-child(even) { background: #f7f9f7; }
-tbody tr:last-child > * { border-bottom: 0; }
-.math-pair { font-size: 1.07em; }
-.math-pair.math-display { display: block; text-align: center; padding: .7rem 0; overflow-x: auto; }
-math { font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", math; }
-.math-fallback { display: none; }
-@supports not (math-style: normal) {
-  .math-pair math { display: none; }
-  .math-fallback { display: inline; font-family: var(--serif); }
-}
-.mobile-contents { display: none; }
-@media (min-width: 1650px) {
-  article { font-size: 1.13rem; }
-}
-@media (max-width: 1080px) {
-  .shell { display: block; max-width: 72rem; padding: 1.25rem 1.25rem 3rem; }
-  .desktop-contents { display: none; }
-  .mobile-contents {
-    display: block; padding: .95rem 1.1rem; margin-bottom: 1rem; border: 1px solid var(--line);
-    border-radius: .3rem; background: var(--paper); font: .95rem/1.5 var(--sans);
-  }
-  .mobile-contents summary { cursor: pointer; font-weight: 700; color: var(--accent); }
-  .mobile-contents nav { max-height: 65vh; overflow: auto; margin-top: 1rem; padding-right: .6rem; }
-  .mobile-contents nav > ol > li { margin-bottom: .8rem; }
-}
-@media (max-width: 600px) {
-  .shell { padding: .65rem .55rem 2rem; }
-  article { padding: 1.65rem 1.1rem 2rem; font-size: 1.035rem; line-height: 1.65; }
-  .document-header h1 { font-size: 2.25rem; max-width: 16ch; }
-  h2 { font-size: 1.55rem; }
-  h2.chapter { margin-top: 3.1rem; }
-  h3 { font-size: 1.18rem; margin-top: 2.4rem; }
-  .table-scroll { margin-left: -.25rem; margin-right: -.25rem; max-width: calc(100% + .5rem); }
-  th, td { padding: .55rem .6rem; }
-}
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-@page { size: A4; margin: 16mm 15mm 18mm; }
-@media print {
-  :root { --ink: #111; --muted: #444; --accent: #111; }
-  body { background: white; }
-  .shell { display: block; max-width: none; padding: 0; margin: 0; }
-  .desktop-contents, .mobile-contents, .skip-link { display: none !important; }
-  article { padding: 0; border: none; border-radius: 0; font-size: 10pt; line-height: 1.4; }
-  .document-header h1 { font-size: 27pt; }
-  .document-header p { font-size: 9pt !important; }
-  .document-header { margin-bottom: 1.4rem; padding-bottom: .7rem; }
-  h2 { font-size: 17pt; margin-top: 1.4rem; }
-  h2.chapter { break-before: page; margin-top: 0; padding-top: .5rem; }
-  h3 { font-size: 12pt; margin-top: 1.4rem; }
-  h4 { font-size: 10.5pt; margin-top: 1rem; }
-  h2, h3, h4, h5, h6 { break-after: avoid; }
-  p { orphans: 3; widows: 3; margin-bottom: .65rem; }
-  a { color: inherit; text-decoration: none; }
-  .table-scroll { overflow: visible; border: 0; margin: 1rem 0; max-width: 100%; }
-  .table-scroll table { width: 100%; min-width: 0 !important; font-size: 7.6pt; line-height: 1.35; }
-  table colgroup { display: none; }
-  th, td { padding: .28rem .3rem; overflow-wrap: anywhere; }
-  thead { display: table-header-group; }
-  tr { break-inside: avoid; }
-  .math-display { break-inside: avoid; }
-}
-</style>
 </head>
-<body>
-<a class="skip-link" href="#main">Skip to the document</a>
-<div class="shell">
-  <nav class="desktop-contents" aria-label="Document contents">
-    <p class="contents-heading">Contents</p>
+<body class="article-body">
+    <header class="site-header">
+      <a class="brand" href="../">Monysovann Ly Papers</a>
+      <nav class="nav" aria-label="Papers">
+        <a href="../five-laws/">Five Laws</a>
+        <a href="../sena/">SENA</a>
+        <a href="../scores/">SCORES</a>
+      </nav>
+    </header>
+<main class="article-page">
+<section class="article-toolbar" aria-label="Paper links">
+<a class="back-link" href="./">Details</a>
+<div class="actions"><a class="button" href="paper.pdf">PDF</a><a class="button secondary" href="paper.pdf" download>Download PDF</a></div>
+</section>
+<article class="tex-article condensed-article">
+
+      <header class="document-header"><h1 class="titleHead" id="neural-networks-are-already-clean">Neural Networks Are Already Clean</h1>
+<p>Nick Cammarata · Goodfire · 2026</p>
+<p>A rewrite condensing concepts from Nick Cammarata’s research essay, not original research or a claim of authorship by this blog. This editorial condensation covers the supplied research essay and all 28 substantive appendix sections. Repeated framing and duplicate presentation have been removed; distinct arguments, experiments, controls, numerical results, and qualifications have been retained. First-person statements and judgments belong to the original author. The observations, interpretations, and conjectures below retain their original evidential status. <a href="https://already-clean.goodfire.com/">Original essay</a>.</p>
+</header>
+<details class="reader-contents"><summary>Contents</summary><nav aria-label="Document contents">
+
     <a class="contents-top" href="#neural-networks-are-already-clean">Title and editorial note</a>
     <ol>
 <li><a href="#the-short-version">The Short Version</a>
@@ -577,193 +418,7 @@ math { font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", math; 
 <li><a href="#original-bibliography">Original bibliography</a>
 </li>
 </ol>
-  </nav>
-  <main id="main">
-    <details class="mobile-contents">
-      <summary>Contents</summary>
-      <nav aria-label="Document contents on small screens"><ol>
-<li><a href="#the-short-version">The Short Version</a>
-</li>
-<li><a href="#revisiting-canonical-evidence">1 · Revisiting canonical evidence</a>
-<ol>
-<li><a href="#cars-and-animals">Cars and Animals</a>
-</li>
-<li><a href="#a-history-of-microscope-errors">A History of Microscope Errors</a>
-</li>
-<li><a href="#recursive-generalization">Recursive Generalization</a>
-</li>
-<li><a href="#superposition">Superposition</a>
-</li>
-<li><a href="#superposition-of-the-gaps">Superposition of the Gaps</a>
-</li>
-</ol>
-</li>
-<li><a href="#exploring-vision-models">2 · Exploring vision models</a>
-<ol>
-<li><a href="#how-i-think-about-neurons">How I Think About Neurons</a>
-</li>
-<li><a href="#what-neurons-do-under-pressure">What Neurons Do Under Pressure</a>
-</li>
-<li><a href="#late-circuits">Late Circuits</a>
-</li>
-<li><a href="#what-dictionaries-learn">What Dictionaries Learn</a>
-</li>
-<li><a href="#rare-things-and-memorization">Rare Things and Memorization</a>
-</li>
-<li><a href="#do-weak-activations-matter">Do Weak Activations Matter?</a>
-<ol>
-<li><a href="#are-they-generalization-or-superposition">Are they generalization or superposition?</a>
-</li>
-<li><a href="#percentiles-or-raw-activations">Percentiles or raw activations?</a>
-</li>
-<li><a href="#do-you-need-them-to-label-a-neuron">Do you need them to label a neuron?</a>
-</li>
-</ol>
-</li>
-</ol>
-</li>
-<li><a href="#exploring-language-models">3 · Exploring language models</a>
-<ol>
-<li><a href="#the-same-circuit-in-features-and-in-neurons">The same circuit, in features and in neurons</a>
-</li>
-<li><a href="#who-stole-the-book-the-sworn-enemy-of-the-lion-king">Who stole the book? The sworn enemy of the lion king</a>
-</li>
-<li><a href="#who-ate-the-cookies-santa-on-negative-poles">Who ate the cookies? Santa, on negative poles</a>
-</li>
-<li><a href="#who-leaked-the-budget-hedge-or-commit">Who leaked the budget? Hedge or commit</a>
-</li>
-<li><a href="#who-stole-the-clock-the-confident-user">Who stole the clock? The confident user</a>
-</li>
-<li><a href="#a-found-wallet-in-a-trillion-parameter-model">A found wallet, in a trillion-parameter model</a>
-</li>
-<li><a href="#from-spelling-fragments-to-miyazaki">From spelling fragments to “Miyazaki”</a>
-</li>
-<li><a href="#neuron-papers">Neuron papers</a>
-</li>
-<li><a href="#explanations-that-can-lose">Explanations That Can Lose</a>
-</li>
-<li><a href="#slouching-towards-monosemanticity">Slouching Towards Monosemanticity</a>
-<ol>
-<li><a href="#dont-say-dot">Don’t Say Dot</a>
-</li>
-</ol>
-</li>
-<li><a href="#the-residual-stream">The Residual Stream</a>
-</li>
-<li><a href="#attention">Attention</a>
-<ol>
-<li><a href="#understanding-attention-and-neurons-through-each-other">Understanding attention and neurons through each other</a>
-</li>
-</ol>
-</li>
-</ol>
-</li>
-<li><a href="#zooming-out">4 · Zooming out</a>
-<ol>
-<li><a href="#what-i-mean-by-clean">What I Mean by Clean</a>
-</li>
-<li><a href="#motifs-over-monosemanticity">Motifs Over Monosemanticity</a>
-</li>
-<li><a href="#a-city-vs-a-knot">A City vs a Knot</a>
-</li>
-<li><a href="#what-a-solution-might-look-like">What a Solution Might Look Like</a>
-</li>
-</ol>
-</li>
-<li><a href="#appendix">Appendix</a>
-<ol>
-<li><a href="#a01-a-note-on-superposition">A01 · A Note on “Superposition”</a>
-</li>
-<li><a href="#a02-on-simulation-scores">A02 · On Simulation Scores</a>
-</li>
-<li><a href="#a03-feature-visualization-in-later-layers">A03 · Feature Visualization in Later Layers</a>
-</li>
-<li><a href="#a04-separating-the-sign-regimes">A04 · Separating the Sign Regimes</a>
-</li>
-<li><a href="#a05-looking-at-the-residual-stream">A05 · Looking at the Residual Stream</a>
-</li>
-<li><a href="#a06-weak-activations-further-measurements">A06 · Weak Activations: Further Measurements</a>
-</li>
-<li><a href="#a07-missing-curves">A07 · Missing Curves</a>
-</li>
-<li><a href="#a08-where-adversarial-examples-go">A08 · Where Adversarial Examples Go</a>
-</li>
-<li><a href="#a09-memorization-and-composition">A09 · Memorization and Composition</a>
-</li>
-<li><a href="#a10-social-security-detection-and-use">A10 · Social Security: Detection and Use</a>
-</li>
-<li><a href="#a11-audits-of-attribution-graphs">A11 · Audits of Attribution Graphs</a>
-</li>
-<li><a href="#a12-explanations-that-could-lose">A12 · Explanations That Could Lose</a>
-</li>
-<li><a href="#a13-edge-featurizers">A13 · Edge Featurizers</a>
-</li>
-<li><a href="#a14-why-networks-generalize">A14 · Why Networks Generalize</a>
-</li>
-<li><a href="#a15-circuit-racing">A15 · Circuit Racing</a>
-</li>
-<li><a href="#a16-watching-neurons-develop">A16 · Watching Neurons Develop</a>
-</li>
-<li><a href="#a17-toy-models">A17 · Toy Models</a>
-</li>
-<li><a href="#a18-more-on-circuit-ecology">A18 · More on Circuit Ecology</a>
-</li>
-<li><a href="#a19-unresolved-responses">A19 · Unresolved Responses</a>
-</li>
-<li><a href="#a20-a-note-on-features-and-definitions">A20 · A Note on Features and Definitions</a>
-</li>
-<li><a href="#a21-relation-to-meta-models">A21 · Relation to Meta-Models</a>
-</li>
-<li><a href="#a22-does-scale-help-or-hurt-superposition">A22 · Does Scale Help or Hurt Superposition?</a>
-</li>
-<li><a href="#a23-on-the-title">A23 · On the Title</a>
-</li>
-<li><a href="#a24-relation-to-conjoined-features">A24 · Relation to Conjoined Features</a>
-</li>
-<li><a href="#a25-why-were-not-worried-about-recursive-generalization">A25 · Why We’re Not Worried About Recursive Generalization</a>
-</li>
-<li><a href="#a26-is-recursive-generalization-hard-to-vary">A26 · Is Recursive Generalization Hard to Vary?</a>
-</li>
-<li><a href="#a27-relation-to-attention-superposition">A27 · Relation to Attention Superposition</a>
-</li>
-<li><a href="#a28-neuroscience-and-why-i-care">A28 · Neuroscience, and Why I Care</a>
-</li>
-</ol>
-</li>
-<li><a href="#detailed-measurements">Detailed measurements</a>
-<ol>
-<li><a href="#layerwise-weak-activation-cutoff-results">Layerwise weak-activation cutoff results</a>
-<ol>
-<li><a href="#inceptionv1-baseline-70.08">InceptionV1 · baseline 70.08%</a>
-</li>
-<li><a href="#small-convnext-baseline-13.73">Small ConvNeXt · baseline 13.73%</a>
-</li>
-<li><a href="#medium-convnext-baseline-72.08">Medium ConvNeXt · baseline 72.08%</a>
-</li>
-<li><a href="#large-convnext-baseline-74.04">Large ConvNeXt · baseline 74.04%</a>
-</li>
-</ol>
-</li>
-<li><a href="#full-medical-circuit-intervention-ledger">Full medical-circuit intervention ledger</a>
-<ol>
-<li><a href="#next-token-probabilities">Next-token probabilities</a>
-</li>
-<li><a href="#hub-response-and-generated-answer">Hub response and generated answer</a>
-</li>
-</ol>
-</li>
-</ol>
-</li>
-<li><a href="#original-bibliography">Original bibliography</a>
-</li>
-</ol></nav>
-    </details>
-    <article id="document">
-<p><a href="../#condensed">← Back to condensed readings</a> · <a href="paper.pdf">PDF</a> · <a href="source-bundle.zip" download>Source bundle</a></p>
-      <header class="document-header"><h1 id="neural-networks-are-already-clean">Neural Networks Are Already Clean</h1>
-<p>Nick Cammarata · Goodfire · 2026</p>
-<p>A rewrite condensing concepts from Nick Cammarata’s research essay, not original research or a claim of authorship by this blog. This editorial condensation covers the supplied research essay and all 28 substantive appendix sections. Repeated framing and duplicate presentation have been removed; distinct arguments, experiments, controls, numerical results, and qualifications have been retained. First-person statements and judgments belong to the original author. The observations, interpretations, and conjectures below retain their original evidential status. <a href="https://already-clean.goodfire.com/">Original essay</a>.</p>
-</header>
+  </nav></details>
       <h2 id="the-short-version">The Short Version</h2>
 <p>Neural networks may already be organized into legible mechanisms that can be studied directly. Apparent <strong>polysemanticity</strong>—a neuron seeming to perform unrelated jobs—often reflects architectural problems, inadequate interpretability tools, or <strong>recursive generalization</strong>: a learned response expands into adjacent patterns, which acquire further related branches. Following those branches can explain a neuron's behavior even when no single familiar label covers it.</p>
 <p>This differs from the concern called <strong>superposition</strong> here: unrelated things being grouped because they rarely interfere. Such arbitrary packing would give little explanatory value to the grouping itself and could require a decomposition, such as a sparse autoencoder, before the network became intelligible. Generalization instead makes the original grouping evidence about how the network works.</p>
@@ -2579,14 +2234,5 @@ math { font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", math; 
 <li><p><a href="https://www.goodfire.com/research/bsf-vision">Uncovering Neural Geometry in Vision Models With Block-Sparse Featurizers</a>. Fel, T., Kowal, M., Jacobs, M., et al., 2026. Goodfire.</p></li>
 </ol>
 
-    </article>
-  </main>
-</div>
-<script>
-// Navigation enhancement only; all content, links, tables, and math work without JavaScript.
-document.querySelectorAll('.mobile-contents a[href^="#"]').forEach(function (link) {
-  link.addEventListener('click', function () { this.closest('details').open = false; });
-});
-</script>
-</body>
-</html>
+
+</article></main><footer class="site-footer"><p>Condensed from Nick Cammarata’s essay · Goodfire · 2026. <a href="https://already-clean.goodfire.com/">Original essay</a>.</p></footer></body></html>

@@ -1,0 +1,30 @@
+@font-face {
+  font-family: "Condensed CJK";
+  src: url("data:font/ttf;base64,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") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E19, U+5D0E, U+732B, U+859B, U+916E, U+9178;
+}
+.condensed-article { font-family: Georgia, "Times New Roman", "Condensed CJK", serif; }
+.condensed-article h2 { margin: 2.5rem 0 1rem; font-size: 1.85rem; line-height: 1.2; }
+.condensed-article .document-header { margin-bottom: 2rem; }
+.condensed-article .reader-contents { margin: 2rem 0; padding: 1rem 0; border-block: 1px solid var(--line); }
+.condensed-article .reader-contents ol { margin: .4rem 0; }
+.condensed-article .table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
+.condensed-article .table-scroll table { display: table; width: 100%; min-width: 36rem; max-width: none; margin: 0; overflow: visible; font-family: ui-sans-serif, system-ui, "Condensed CJK", sans-serif; font-size: .85rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.condensed-article .table-scroll[data-columns="2"] table { min-width: 24rem; }
+.condensed-article .table-scroll[data-columns="5"] table { min-width: 48rem; }
+.condensed-article .table-scroll[data-columns="6"] table { min-width: 48rem; }
+.condensed-article .table-scroll[data-columns="7"] table { min-width: 56rem; }
+.condensed-article th, .condensed-article td { padding: .7rem .8rem; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: normal; }
+.condensed-article th { background: var(--accent-soft); font-weight: 700; }
+.condensed-article td p, .condensed-article th p { margin: 0; }
+.condensed-article tr:nth-child(even) { background: var(--bg); }
+.condensed-article .math-display { display: block; max-width: 100%; overflow-x: auto; text-align: center; padding: .7rem 0; }
+.condensed-article math { font-family: "Cambria Math", "STIX Two Math", math; }
+.condensed-article .math-fallback { display: none; }
+.condensed-article pre { max-width: 100%; overflow: auto; padding: 1rem; background: var(--bg); }
+.condensed-article code { overflow-wrap: anywhere; }
+.condensed-article :is(a, summary, .table-scroll):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.condensed-article :is(h2,h3,h4) { scroll-margin-top: 1.5rem; }
