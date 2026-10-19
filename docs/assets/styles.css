@@ -122,7 +122,8 @@ img {
 }
 
 .hero-inner,
-.paper-hero-inner {
+.paper-hero-inner,
+.paper-hero-main {
   display: grid;
   gap: 1.4rem;
 }
@@ -141,16 +142,6 @@ img {
 .paper-hero-main,
 .archive-intro {
   max-width: var(--measure);
-}
-
-.paper-hero-main {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.paper-hero-main > .actions,
-.paper-hero-main > .meta-list {
-  margin-top: 0;
 }
 
 .eyebrow {

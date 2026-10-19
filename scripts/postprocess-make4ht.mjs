@@ -108,7 +108,7 @@ const page = `<!doctype html>
     <meta name="description" content="${escapeHtml(paperTitle)} by Monysovann Ly.">
     <title>${escapeHtml(paperTitle)} | Paper Reader</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="../assets/styles.css?v=20261019-spacing">
     <script>
       window.MathJax = {
         tex: {
