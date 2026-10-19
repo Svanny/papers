@@ -143,6 +143,16 @@ img {
   max-width: var(--measure);
 }
 
+.paper-hero-main {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.paper-hero-main > .actions,
+.paper-hero-main > .meta-list {
+  margin-top: 0;
+}
+
 .eyebrow {
   margin: 0 0 0.7rem;
   color: var(--accent);
@@ -733,13 +743,18 @@ h1 {
   }
 }
 
+.archive-page .hero-inner {
+  max-width: var(--wide);
+  margin-inline: auto;
+}
+
 .archive-page .hero {
-  padding-bottom: 1.5rem;
+  padding-bottom: clamp(2rem, 4vw, 2.5rem);
 }
 
 .archive-page .section {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: clamp(2rem, 4vw, 2.5rem);
+  padding-bottom: clamp(2rem, 4vw, 2.5rem);
 }
 
 .archive-page .paper-row:last-child {
