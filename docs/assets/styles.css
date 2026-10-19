@@ -108,9 +108,6 @@ img {
   padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
 }
 
-.section + .section {
-  border-top: 1px solid var(--line);
-}
 
 .hero-inner,
 .paper-hero-inner,
@@ -260,8 +257,8 @@ h1 {
   border-bottom: 1px solid var(--line);
 }
 
-.paper-row:first-child {
-  border-top: 0;
+.paper-row:last-child {
+  border-bottom: 0;
 }
 
 .paper-row:hover .paper-row-title {
