@@ -732,3 +732,16 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+.archive-page .hero {
+  padding-bottom: 1.5rem;
+}
+
+.archive-page .section {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.archive-page .paper-row:last-child {
+  padding-bottom: 0;
+}
