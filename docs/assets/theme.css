@@ -1,0 +1,125 @@
+/* Shared appearance controls, including the independently styled reader. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line, #dedfdc);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft, #edf1ef);
+  color: var(--ink);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle .theme-sun,
+[data-theme="dark"] .theme-toggle .theme-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .theme-sun {
+  display: block;
+}
+
+.standalone-reader > .theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: max(22px, calc((100vw - 1440px) / 2 + 52px));
+}
+
+.standalone-reader .layout {
+  padding-top: 76px;
+}
+
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1c1e1f;
+    --surface: #222526;
+    --ink: #ccc9c1;
+    --muted: #aaa8a1;
+    --soft: #96958f;
+    --line: #3b3e3f;
+    --line-strong: #575b5c;
+    --accent: #9eb3c5;
+    --accent-soft: #2a343d;
+    --accent-hover: #b6c8d7;
+    --on-accent: #1c2630;
+    /* The standalone reader uses its original token names. */
+    --paper: var(--surface);
+    --rule: var(--line);
+  }
+
+  [data-theme="dark"] .standalone-reader :is(nav a, .edition-note) {
+    color: var(--muted);
+  }
+
+  [data-theme="dark"] .standalone-reader a:hover {
+    color: var(--accent-hover);
+  }
+
+  [data-theme="dark"] .standalone-reader .edition-note {
+    border-color: var(--accent);
+  }
+
+  [data-theme="dark"] .standalone-reader th {
+    background: var(--accent-soft);
+  }
+
+  [data-theme="dark"] .standalone-reader tr:nth-child(even) {
+    background: var(--bg);
+  }
+
+  [data-theme="dark"] .standalone-reader .original-figure {
+    background: var(--bg);
+    border-color: var(--line);
+  }
+
+  [data-theme="dark"] .standalone-reader .original-figure figcaption,
+  [data-theme="dark"] .standalone-reader .original-figure figcaption span {
+    color: var(--muted);
+  }
+
+  [data-theme="dark"] .standalone-reader .original-figure figcaption strong {
+    color: var(--ink);
+  }
+
+  /* Keep original black-on-transparent diagrams legible without recoloring them. */
+  [data-theme="dark"] :is(.tex-article img, .original-figure img) {
+    background: #fff;
+  }
+
+  [data-theme="dark"] :is(.paper-thumb, .cover-preview, .tex-article img, .original-figure img) {
+    filter: brightness(0.8);
+  }
+}
+
+@media print {
+  .theme-toggle { display: none; }
+  .standalone-reader .layout { padding-top: 0; }
+}

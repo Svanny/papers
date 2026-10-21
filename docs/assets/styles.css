@@ -9,6 +9,8 @@
   --line-strong: #bdb8ad;
   --accent: #47576a;
   --accent-soft: #eef1f4;
+  --accent-hover: #2f3e50;
+  --on-accent: #ffffff;
   --measure: 72ch;
   --wide: 1100px;
 }
@@ -203,7 +205,7 @@ h1 {
   border: 1px solid var(--accent);
   border-radius: 0;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.88rem;
   font-weight: 720;
   line-height: 1.1;
@@ -213,9 +215,9 @@ h1 {
 
 .button:hover,
 .button:focus-visible {
-  background: #2f3e50;
-  border-color: #2f3e50;
-  color: #fff;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--on-accent);
 }
 
 .button.secondary {
@@ -226,7 +228,7 @@ h1 {
 .button.secondary:hover,
 .button.secondary:focus-visible {
   background: var(--accent-soft);
-  color: #2f3e50;
+  color: var(--accent-hover);
 }
 
 .archive-head {
@@ -676,11 +678,6 @@ h1 {
 }
 
 @media (max-width: 860px) {
-  .site-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .hero,
   .paper-hero {
     padding-top: 2.6rem;
